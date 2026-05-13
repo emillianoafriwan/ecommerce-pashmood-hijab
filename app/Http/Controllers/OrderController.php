@@ -20,7 +20,7 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    // 2. Menampilkan form Checkout
+    // 2. Menampilkan form Pre-Order
     public function create()
     {
         if (!session()->has('cart') || empty(session('cart'))) {
@@ -29,7 +29,7 @@ class OrderController extends Controller
         return view('orders.checkout');
     }
 
-    // 3. Proses Checkout (Simpan ke DB)
+    // 3. Proses Pre-Order (Simpan ke DB)
     public function store(Request $request)
     {
         $request->validate([
@@ -45,7 +45,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'total_price' => $total,
-                'status' => 'pending',
+                'status' => 'pre_order',
                 'address' => $request->address,
                 'phone' => $request->phone,
             ]);
@@ -64,13 +64,13 @@ class OrderController extends Controller
                     'price'        => $details['price'],
                 ]);
                 
-                // Opsional: Kurangi stok produk
+                // Kurangi kuota stok variasi agar slot pre-order tidak melebihi persediaan
                 \App\Models\ProductVariation::where('id', $variationId)->decrement('stock', $details['quantity']);
             }
         });
 
         session()->forget('cart');
-        return redirect()->route('order.detail', $order->id)->with('success', 'Pesanan berhasil dibuat!');
+        return redirect()->route('order.detail', $order->id)->with('success', 'Pre-order berhasil dibuat!');
     }
 
     // 4. Menampilkan detail pesanan (Sisi User)
@@ -133,7 +133,7 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'status' => 'pending', 
+            'status' => 'pre_order', 
             'payment_proof' => null, // Kosongkan foto
             'rejection_reason' => $request->reason // Simpan alasan penolakan
         ]);
@@ -171,8 +171,12 @@ class OrderController extends Controller
         $request->validate(['courier' => 'required|string|max:50']);
         $order = Order::findOrFail($id);
 
+        if ($order->status !== 'paid') {
+            return back()->with('error', 'Pre-order harus dibayar dan diverifikasi sebelum resi dibuat.');
+        }
+
         if (!$order->resi_number) {
-            $resi_number = 'SC' . date('ymd') . str_pad($order->id, 4, '0', STR_PAD_LEFT) . mt_rand(100, 999);
+            $resi_number = 'PO' . date('ymd') . str_pad($order->id, 4, '0', STR_PAD_LEFT) . mt_rand(100, 999);
             $order->update([
                 'courier' => $request->courier,
                 'resi_number' => $resi_number,
@@ -197,10 +201,14 @@ class OrderController extends Controller
     {
         $order = Order::findOrFail($id);
         
+        if ($order->status !== 'paid') {
+            return back()->with('error', 'Pre-order harus berstatus terkonfirmasi sebelum dikirim.');
+        }
+
         // Pastikan resi sudah ada sebelum bisa dikirim
         if ($order->resi_number) {
             $order->update(['status' => 'shipped']);
-            return back()->with('success', 'Mantap! Pesanan resmi berstatus "Dikirim".');
+            return back()->with('success', 'Mantap! Pre-order resmi berstatus "Dikirim".');
         }
         
         return back()->with('error', 'Buat resi terlebih dahulu.');
@@ -222,10 +230,10 @@ class OrderController extends Controller
             if ($firstItem) {
                 // Arahkan langsung ke halaman produk tersebut dengan pesan khusus
                 return redirect()->route('product.show', $firstItem->product_id)
-                                 ->with('success', 'Pesanan selesai! 🎉 Yuk, bagikan pengalaman Anda dengan memberikan ulasan di bawah ini.');
+                                 ->with('success', 'Pre-order selesai! Yuk, bagikan pengalaman Anda dengan memberikan ulasan di bawah ini.');
             }
 
-            return back()->with('success', 'Hore! Terima kasih telah berbelanja. Pesanan Anda telah selesai.');
+            return back()->with('success', 'Terima kasih telah pre-order. Pesanan Anda telah selesai.');
         }
 
         return back()->with('error', 'Status pesanan tidak dapat diubah.');

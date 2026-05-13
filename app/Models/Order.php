@@ -17,7 +17,7 @@ class Order extends Model
         'phone', 
         'payment_proof',
         'courier',
-        'resi_number' // Tambahkan ini
+            'resi_number' // Tambahkan ini
     ];
 
     public function user()
@@ -34,12 +34,13 @@ class Order extends Model
     public function statusIndo()
     {
         return match($this->status) {
-            'pending'   => 'Tertunda',
-            'waiting'   => 'Menunggu persetujuan',
-            'paid'      => 'Pembayaran Selesai',
-            'shipped'   => 'Dalam Perjalanan Menuju Lokasi Anda',
-            'completed' => 'Pesanan Selesai',
-            'canceled'  => 'Pesanan Dibatalkan',
+            'pre_order' => 'Pre-Order Menunggu Pembayaran',
+            'pending'   => 'Pre-Order Menunggu Pembayaran',
+            'waiting'   => 'Menunggu Verifikasi Pembayaran',
+            'paid'      => 'Pre-Order Dikonfirmasi',
+            'shipped'   => 'Pashmina Dalam Pengiriman',
+            'completed' => 'Pre-Order Selesai',
+            'canceled'  => 'Pre-Order Dibatalkan',
             default     => $this->status, // Jaga-jaga kalau ada status lain
         };
     }

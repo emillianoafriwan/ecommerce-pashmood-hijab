@@ -66,7 +66,7 @@
                         💳 {{ __('Pengaturan Rekening Bank (Khusus Admin)') }}
                     </h2>
                     <p class="mt-1 text-sm text-indigo-600 dark:text-indigo-300">
-                        {{ __("Data ini akan ditampilkan otomatis di halaman checkout pembeli.") }}
+                        {{ __("Data ini akan ditampilkan otomatis di halaman pre-order pembeli.") }}
                     </p>
                 </header>
 

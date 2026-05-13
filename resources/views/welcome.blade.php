@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPORT CENTER-Shop</title>
+    <title>Pashmina Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Sembunyikan scrollbar tapi tetap bisa di-scroll */
@@ -15,11 +15,11 @@
 
     <nav class="bg-gradient-to-r from-slate-900 to-indigo-800 p-4 text-white shadow-xl sticky top-0 z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="font-black text-2xl tracking-widest italic text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">SPORT CENTER</h1>
+            <h1 class="font-black text-2xl tracking-widest italic text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">PASHMINA PO</h1>
             
             <div class="flex items-center gap-6">
                 <a href="{{ route('cart.index') }}" class="font-bold flex items-center gap-2 hover:text-indigo-300 transition duration-300">
-                    <span class="text-xl">🛒</span> Keranjang
+                    <span class="text-xl">🛒</span> Keranjang PO
                 </a>
                 
                 @auth
@@ -42,7 +42,7 @@
         <div class="max-w-6xl mx-auto px-4 pt-6">
             <form action="{{ route('shop.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 bg-slate-50 p-2 rounded-2xl md:rounded-full border border-gray-200 shadow-inner">
                 <input type="text" name="search" value="{{ request('search') }}" 
-                       placeholder="Cari sepatu, raket, atau perlengkapan lainnya..." 
+                       placeholder="Cari pashmina, warna, atau bahan favorit..." 
                        class="w-full md:flex-1 px-6 py-3 bg-transparent focus:outline-none text-gray-700 placeholder-gray-400 font-medium">
                 
                 <div class="w-px bg-gray-300 hidden md:block my-2"></div>
@@ -73,14 +73,14 @@
         
         <div class="mb-10">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-black text-slate-800 border-l-4 border-indigo-600 pl-3 uppercase tracking-wider">Rekomendasi Pilihan</h2>
+                <h2 class="text-lg font-black text-slate-800 border-l-4 border-indigo-600 pl-3 uppercase tracking-wider">Rekomendasi Pashmina</h2>
             </div>
 
             <div class="flex overflow-x-auto gap-5 pb-6 hide-scroll snap-x">
                 @foreach($products->take(5) as $product)
                     <a href="{{ route('product.show', $product->id) }}" class="group min-w-[200px] w-[200px] bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 relative snap-start block overflow-hidden border border-gray-100">
                         <div class="overflow-hidden">
-                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                            <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
                         </div>
                         <div class="p-4 bg-white relative z-10">
                             <h3 class="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug mb-2 group-hover:text-indigo-600 transition">{{ $product->name }}</h3>
@@ -92,24 +92,24 @@
         </div>
 
         <div class="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="#" class="block overflow-hidden rounded-2xl shadow-md group">
+            <a href="{{ route('shop.index', ['search' => 'pashmina voal']) }}" class="block overflow-hidden rounded-2xl shadow-md group">
                 <img src="{{ asset('images/banner6.webp') }}" alt="Banner Promo" class="w-full h-auto object-cover group-hover:scale-105 transition duration-500">
             </a>
-            <a href="#" class="block overflow-hidden rounded-2xl shadow-md group">
+            <a href="{{ route('shop.index', ['search' => 'pashmina ceruty']) }}" class="block overflow-hidden rounded-2xl shadow-md group">
                 <img src="{{ asset('images/banner5.jpg') }}" alt="Banner Event" class="w-full h-auto object-cover group-hover:scale-105 transition duration-500">
             </a>
         </div>
 
         <div class="bg-white p-6 shadow-sm rounded-3xl border border-gray-100">
             <div class="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
-                <h2 class="text-lg font-black text-slate-800 border-l-4 border-indigo-600 pl-3 uppercase tracking-wider">Katalog Produk</h2>
+                <h2 class="text-lg font-black text-slate-800 border-l-4 border-indigo-600 pl-3 uppercase tracking-wider">Katalog Pashmina</h2>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 @forelse($products as $product)
                     <a href="{{ route('product.show', $product->id) }}" class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 relative block overflow-hidden border border-gray-100">
                         <div class="overflow-hidden">
-                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
+                            <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-48 object-cover group-hover:scale-110 transition duration-500">
                         </div>
                         <div class="p-4 bg-white relative z-10">
                             <h3 class="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug mb-2 group-hover:text-indigo-600 transition">{{ $product->name }}</h3>

@@ -117,6 +117,11 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($product->orderItems()->exists()) {
+            return redirect()->route('products.index')
+                ->with('error', 'Produk tidak bisa dihapus karena sudah pernah masuk transaksi.');
+        }
+
         if ($product->image_path) {
             Storage::delete('public/' . $product->image_path);
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SPORT CENTER</title>
+    <title>Dashboard - Pashmina Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
@@ -11,7 +11,7 @@
     <!-- Top Navbar -->
     <nav class="bg-white shadow-sm border-b border-gray-100 p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-600 tracking-wider">SPORT CENTER-Shop</h1>
+            <h1 class="font-bold text-xl text-indigo-600 tracking-wider">PASHMINA PO</h1>
             <div class="flex items-center gap-4">
                 <span class="text-sm font-medium text-gray-700">👤 {{ auth()->user()->name }}</span>
                 <form action="{{ route('logout') }}" method="POST">
@@ -49,11 +49,11 @@
                         <p class="text-2xl font-black text-gray-800 mt-2">Rp {{ number_format($totalRevenue ?? 0, 0, ',', '.') }}</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-yellow-500 hover:shadow-md transition">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pesanan Pending</p>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pre-Order Pending</p>
                         <p class="text-2xl font-black text-gray-800 mt-2">{{ $pendingOrders ?? 0 }} <span class="text-sm font-normal text-gray-400">pesanan</span></p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500 hover:shadow-md transition">
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pesanan Selesai</p>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pre-Order Selesai</p>
                         <p class="text-2xl font-black text-gray-800 mt-2">{{ $completedOrders ?? 0 }} <span class="text-sm font-normal text-gray-400">pesanan</span></p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-indigo-500 hover:shadow-md transition">
@@ -80,8 +80,8 @@
                     </a>
                     <a href="{{ route('admin.orders') }}" class="block bg-indigo-600 p-6 rounded-2xl shadow-md border border-indigo-700 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-1 transition transform duration-200">
                         <div class="text-3xl mb-3">🛒</div>
-                        <h4 class="font-bold text-white text-lg mb-1">Daftar Pesanan</h4>
-                        <p class="text-indigo-100 text-sm">Verifikasi pembayaran dan kelola pesanan masuk.</p>
+                        <h4 class="font-bold text-white text-lg mb-1">Daftar Pre-Order</h4>
+                        <p class="text-indigo-100 text-sm">Verifikasi pembayaran dan kelola pre-order masuk.</p>
                     </a>
                 </div>
             </div>
@@ -101,10 +101,10 @@
                     </a>
                     
                     <!-- PERBAIKAN: Href Pesanan Saya sudah diisi rute orders.history -->
-                    <a href="{{ route('orders.index') }}" class="block bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition transform duration-200">
+                    <a href="{{ route('orders.history') }}" class="block bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition transform duration-200">
                         <div class="text-3xl mb-3">📦</div>
-                        <h4 class="font-bold text-gray-900 text-lg mb-1">Pesanan Saya</h4>
-                        <p class="text-sm text-gray-500">Lacak dan lihat status pesanan Anda.</p>
+                        <h4 class="font-bold text-gray-900 text-lg mb-1">Pre-Order Saya</h4>
+                        <p class="text-sm text-gray-500">Lacak dan lihat status pre-order Anda.</p>
                     </a>
                 </div>
             </div>

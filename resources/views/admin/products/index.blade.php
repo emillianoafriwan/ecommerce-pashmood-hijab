@@ -10,7 +10,7 @@
     
     <nav class="bg-indigo-600 shadow-md mb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">SPORT CENTER-Shop
+            <div class="flex justify-between h-16 items-center">PASHMINA PO
                 <span class="font-bold text-white text-xl tracking-wider"></span>
                 <a href="/dashboard" class="text-indigo-100 hover:text-white text-sm font-medium">← Kembali ke Dashboard</a>
             </div>
@@ -25,10 +25,16 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 shadow-sm" role="alert">
+                <p class="text-red-700 font-medium">{{ session('error') }}</p>
+            </div>
+        @endif
+
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900">Manajemen Produk</h1>
-                <p class="text-gray-500 mt-1">Kelola stok, harga, dan variasi warna produk Anda.</p>
+                <p class="text-gray-500 mt-1">Kelola kuota pre-order, harga, dan variasi warna pashmina Anda.</p>
             </div>
             <a href="{{ route('products.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 transition">
                 + Tambah Produk Baru
@@ -51,7 +57,7 @@
                     @forelse($products as $product)
                         <tr class="hover:bg-gray-50 transition">
                             <td class="px-6 py-4">
-                                <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="h-14 w-14 object-cover rounded-lg shadow-sm">
+                                <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="h-14 w-14 object-cover rounded-lg shadow-sm">
                             </td>
                             <td class="px-6 py-4 font-bold text-gray-900">{{ $product->name }}</td>
                             <td class="px-6 py-4">

@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat Pesanan</title>
+    <title>Riwayat Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
-        <h2 class="text-2xl font-bold mb-6">Riwayat Pesanan Saya</h2>
+        <h2 class="text-2xl font-bold mb-6">Riwayat Pre-Order Saya</h2>
         
         <table class="w-full text-left">
             <thead>
                 <tr class="border-b">
-                    <th class="p-3">ID Pesanan</th>
+                    <th class="p-3">ID Pre-Order</th>
                     <th class="p-3">Total</th>
                     <th class="p-3">Status</th>
                     <th class="p-3">Aksi</th>

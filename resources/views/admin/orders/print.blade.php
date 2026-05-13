@@ -19,8 +19,8 @@
         
         <!-- Header / Logo Toko -->
         <div class="text-center border-b-2 border-black pb-2 mb-2">
-            <h1 class="font-black text-2xl tracking-widest uppercase">SPORT CENTER</h1>
-            <p class="text-[10px] uppercase font-bold">Toko Perlengkapan Olahraga Terpercaya</p>
+            <h1 class="font-black text-2xl tracking-widest uppercase">PASHMINA PO</h1>
+            <p class="text-[10px] uppercase font-bold">Toko Pre-Order Pashmina</p>
         </div>
         
         <!-- Kotak Resi & Barcode Palsu -->
@@ -40,7 +40,7 @@
         <!-- Alamat Pengirim -->
         <div class="border border-black p-2 mb-4 text-sm">
             <p class="font-bold border-b border-black mb-1 text-[10px]">PENGIRIM:</p>
-            <p class="font-bold">SPORT CENTER</p>
+            <p class="font-bold">PASHMINA PO</p>
             <p>0812-3456-7890 (CS)</p>
         </div>
 

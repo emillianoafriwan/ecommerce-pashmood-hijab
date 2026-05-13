@@ -12,7 +12,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <span class="font-bold text-white text-xl tracking-wider">TOKO SEPATU</span>
+                    <span class="font-bold text-white text-xl tracking-wider">PASHMINA PO</span>
                 </div>
                 <div class="flex items-center">
                     <a href="/dashboard" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">Kembali ke Dashboard</a>
@@ -35,6 +35,12 @@
                         <p class="text-green-700 font-medium">{{ session('success') }}</p>
                     </div>
                 </div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 shadow-sm" role="alert">
+                <p class="text-red-700 font-medium">{{ session('error') }}</p>
             </div>
         @endif
 

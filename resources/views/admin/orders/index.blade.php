@@ -2,14 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Daftar Pesanan - Admin</title>
+    <title>Daftar Pre-Order - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow">
         
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Daftar Semua Pesanan</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Daftar Semua Pre-Order</h2>
             <a href="{{ route('admin.orders.report') }}" target="_blank" 
                class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-green-700 transition flex items-center gap-2">
                 🖨️ Cetak Laporan
@@ -43,13 +43,13 @@
                         <td class="p-3">
                             <a href="{{ route('admin.order.detail', $order->id) }}" 
                                class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 transition">
-                                Detail & Verifikasi
+                                Detail & Verifikasi PO
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="p-6 text-center text-gray-500">Belum ada pesanan yang masuk.</td>
+                        <td colspan="5" class="p-6 text-center text-gray-500">Belum ada pre-order yang masuk.</td>
                     </tr>
                     @endforelse
                 </tbody>

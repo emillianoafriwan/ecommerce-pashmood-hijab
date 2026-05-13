@@ -19,7 +19,7 @@ class CartController extends Controller
     {
         // 1. Cek Login
         if (!Auth::check()) {
-            return redirect()->route('login')->with('info', 'Silakan login terlebih dahulu untuk belanja!');
+            return redirect()->route('login')->with('info', 'Silakan login terlebih dahulu untuk pre-order!');
         }
 
         // 2. Validasi input warna & jumlah pembelian
@@ -36,7 +36,7 @@ class CartController extends Controller
 
         // Validasi Keamanan: Cek apakah jumlah pembelian melebihi stok variasi yang dipilih
         if ($quantity > $variation->stock) {
-            return back()->with('error', 'Maaf, jumlah pembelian melebihi sisa stok warna yang tersedia!');
+            return back()->with('error', 'Maaf, jumlah pre-order melebihi sisa kuota warna yang tersedia!');
         }
 
         $cart = session()->get('cart', []);
@@ -51,7 +51,7 @@ class CartController extends Controller
             
             // Validasi Keamanan Lapis 2: Cek total tumpukan di keranjang vs sisa stok asli
             if ($newQuantity > $variation->stock) {
-                return back()->with('error', 'Total barang ini di keranjang Anda melebihi sisa stok warna!');
+                return back()->with('error', 'Total pashmina ini di keranjang Anda melebihi sisa kuota warna!');
             }
             
             $cart[$cartKey]['quantity'] = $newQuantity;
@@ -63,12 +63,12 @@ class CartController extends Controller
                 "variation_id" => $variation->id,    // Menyimpan ID variasi
                 "quantity"     => $quantity,         // Menggunakan quantity dari input form
                 "price"        => $product->price,
-                "image"        => $product->image_path
+                "image"        => $product->imageUrl()
             ];
         }
 
         session()->put('cart', $cart);
-        return redirect()->route('cart.index')->with('success', 'Sip! ' . $quantity . ' ' . $product->name . ' (' . $variation->color . ') berhasil masuk keranjang!');
+        return redirect()->route('cart.index')->with('success', 'Sip! ' . $quantity . ' ' . $product->name . ' (' . $variation->color . ') berhasil masuk keranjang pre-order!');
     }
 
     public function remove($cartKey) // Terima $cartKey, bukan $id

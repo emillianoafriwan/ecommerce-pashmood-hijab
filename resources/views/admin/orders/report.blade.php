@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Penjualan - SPORT CENTER</title>
+    <title>Laporan Penjualan - Pashmina Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* CSS ini memastikan tombol tidak ikut tercetak di kertas */
@@ -17,7 +17,7 @@
     <!-- Tombol Aksi (Akan hilang saat diprint) -->
     <div class="no-print mb-8 flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <a href="{{ route('admin.orders') }}" class="text-gray-500 hover:text-gray-800 font-bold transition flex items-center gap-2">
-            &larr; Kembali ke Daftar Pesanan
+            &larr; Kembali ke Daftar Pre-Order
         </a>
         <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow-md flex items-center gap-2">
             🖨️ Cetak Laporan Sekarang
@@ -29,8 +29,8 @@
         
         <!-- Header Kop Laporan -->
         <div class="mb-8 border-b-2 border-gray-800 pb-6 text-center">
-            <h1 class="text-4xl font-black text-gray-900 tracking-widest uppercase">SPORT CENTER</h1>
-            <p class="text-xl text-gray-600 font-bold mt-2">Laporan Rekapitulasi Penjualan</p>
+            <h1 class="text-4xl font-black text-gray-900 tracking-widest uppercase">PASHMINA PO</h1>
+            <p class="text-xl text-gray-600 font-bold mt-2">Laporan Rekapitulasi Penjualan Pre-Order</p>
             <p class="text-sm text-gray-500 mt-1">Dicetak pada: {{ date('d M Y, H:i') }} WIB</p>
         </div>
 
@@ -89,7 +89,7 @@
             <div class="text-center w-48">
                 <p class="text-gray-600 mb-16">Mengetahui, Admin</p>
                 <p class="font-bold text-gray-800 border-b border-gray-400 pb-1">{{ auth()->user()->name ?? 'Administrator' }}</p>
-                <p class="text-xs text-gray-500 mt-1">SPORT CENTER</p>
+                <p class="text-xs text-gray-500 mt-1">PASHMINA PO</p>
             </div>
         </div>
 

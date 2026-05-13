@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keranjang Belanja</title>
+    <title>Keranjang Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
 <div class="max-w-5xl mx-auto py-10 px-4">
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Keranjang Belanja Anda</h1>
-        <a href="/" class="text-indigo-600 hover:underline font-medium">← Lanjut Belanja</a>
+        <h1 class="text-3xl font-bold text-gray-800">Keranjang Pre-Order Anda</h1>
+        <a href="/" class="text-indigo-600 hover:underline font-medium">← Lanjut Pilih Pashmina</a>
     </div>
 
     @if(session('cart'))
@@ -30,7 +30,13 @@
                     @foreach(session('cart') as $id => $details)
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-6 py-4 flex items-center">
-                            <img src="{{ asset('storage/' . $details['image']) }}" class="h-16 w-16 object-cover rounded shadow-sm mr-4">
+                            @php
+                                $cartImage = $details['image'] ?? '';
+                                $cartImageUrl = \Illuminate\Support\Str::startsWith($cartImage, ['http://', 'https://'])
+                                    ? $cartImage
+                                    : (\Illuminate\Support\Str::startsWith($cartImage, 'images/') ? asset($cartImage) : asset('storage/' . $cartImage));
+                            @endphp
+                            <img src="{{ $cartImageUrl }}" class="h-16 w-16 object-cover rounded shadow-sm mr-4">
                             <span class="font-bold text-gray-800">{{ $details['name'] }}</span>
                         </td>
                         <td class="px-6 py-4 text-gray-600">Rp {{ number_format($details['price'], 0, ',', '.') }}</td>
@@ -52,14 +58,14 @@
             
             <div class="p-6 bg-gray-50 flex justify-end items-center border-t border-gray-200">
                 <a href="{{ route('checkout.create') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition shadow-md font-bold text-lg">
-                    Konfirmasi Pesanan
+                    Lanjut Pre-Order
                 </a>
             </div>
         </div>
     @else
         <div class="text-center py-24 bg-white rounded-lg shadow-sm border border-gray-100">
-            <p class="text-gray-500 mb-6 text-xl">Keranjang Anda masih kosong.</p>
-            <a href="/" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-bold shadow-md">Mulai Belanja</a>
+            <p class="text-gray-500 mb-6 text-xl">Keranjang pre-order Anda masih kosong.</p>
+            <a href="/" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-bold shadow-md">Mulai Pilih Pashmina</a>
         </div>
     @endif
 </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $product->name }} - SPORT CENTER</title>
+    <title>{{ $product->name }} - Pashmina Pre-Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 font-sans antialiased">
@@ -11,9 +11,9 @@
     <!-- Navbar -->
     <nav class="bg-indigo-600 p-4 text-white shadow-lg">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <a href="{{ route('shop.index') }}" class="font-bold text-xl tracking-wider">SPORT CENTER</a>
+            <a href="{{ route('shop.index') }}" class="font-bold text-xl tracking-wider">PASHMINA PO</a>
             <div class="flex items-center gap-6">
-                <a href="{{ route('cart.index') }}" class="font-bold hover:text-indigo-100 transition">🛒 Keranjang</a>
+                <a href="{{ route('cart.index') }}" class="font-bold hover:text-indigo-100 transition">🛒 Keranjang PO</a>
                 @auth
                     <div class="flex items-center gap-4 border-l border-indigo-500 pl-6">
                         <span class="text-sm">Halo, {{ auth()->user()->name }}</span>
@@ -32,13 +32,19 @@
         <!-- BAGIAN 1: DETAIL PRODUK -->
         <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
             <div>
-                <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="w-full h-96 object-cover rounded-2xl shadow-md">
+                <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-96 object-cover rounded-2xl shadow-md">
             </div>
 
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-800">{{ $product->name }}</h1>
                 <p class="text-2xl font-bold text-indigo-600 mt-2">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                <p class="text-gray-500 mt-4 leading-relaxed">{{ $product->description ?? 'Lightspeed Reborn Meta XR melanjutkan warisan kecepatan dengan pembaruan modern pada siluet ikonisnya. Dengan upper PU Synthetic Microfiber satu bagian, sepatu ini menawarkan fleksibilitas ringan, kenyamanan luar biasa, dan proses break-in yang mudah untuk langsung siap bermain.' }}</p>
+                <p class="text-gray-500 mt-4 leading-relaxed">{{ $product->description ?? 'Pashmina lembut dengan pilihan warna elegan, nyaman dipakai harian maupun acara spesial. Silakan pilih warna dan jumlah untuk mengamankan slot pre-order Anda.' }}</p>
+
+                @php
+                    $availableVariations = $product->variations->where('stock', '>', 0)->values();
+                    $firstAvailableVariationId = optional($availableVariations->first())->id;
+                    $firstAvailableStock = optional($availableVariations->first())->stock ?? 1;
+                @endphp
 
                 <form action="{{ route('cart.add', $product->id) }}" method="POST" class="mt-8">
                     @csrf
@@ -47,11 +53,18 @@
                         <div class="flex flex-wrap gap-3">
                             @forelse($product->variations as $variation)
                                 <label class="relative cursor-pointer">
-                                    <input type="radio" name="variation_id" value="{{ $variation->id }}" class="peer hidden" {{ $variation->stock <= 0 ? 'disabled' : '' }} required>
+                                    <input type="radio"
+                                           name="variation_id"
+                                           value="{{ $variation->id }}"
+                                           data-stock="{{ $variation->stock }}"
+                                           class="peer hidden"
+                                           {{ $variation->stock <= 0 ? 'disabled' : '' }}
+                                           {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }}
+                                           required>
                                     <div class="px-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-bold peer-checked:border-indigo-600 peer-checked:bg-indigo-50 peer-checked:text-indigo-600 transition-all {{ $variation->stock <= 0 ? 'opacity-50 cursor-not-allowed bg-gray-100' : '' }}">
                                         {{ $variation->color }}
                                         <span class="block text-[10px] font-normal text-gray-500">
-                                            {{ $variation->stock > 0 ? 'Stok: ' . $variation->stock : 'Habis' }}
+                                            {{ $variation->stock > 0 ? 'Kuota PO: ' . $variation->stock : 'Kuota habis' }}
                                         </span>
                                     </div>
                                 </label>
@@ -63,15 +76,24 @@
 
                     <!-- KOTAK INPUT JUMLAH PEMBELIAN -->
                     <div class="mb-8">
-                        <label for="quantity" class="block text-sm font-bold text-gray-700 mb-3">Jumlah Pembelian:</label>
-                        <div class="flex items-center gap-4">
-                            <input type="number" name="quantity" id="quantity" value="1" min="1" class="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold text-lg shadow-sm" required>
+                        <label for="quantity" class="block text-sm font-bold text-gray-700 mb-3">Jumlah Pre-Order:</label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="decreaseQty" class="w-11 h-11 rounded-lg border border-gray-300 bg-white text-xl font-black text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500">-</button>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $firstAvailableStock }}" class="w-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-center font-bold text-lg shadow-sm" required>
+                            <button type="button" id="increaseQty" class="w-11 h-11 rounded-lg border border-gray-300 bg-white text-xl font-black text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500">+</button>
                         </div>
+                        <p class="text-xs text-gray-500 mt-2">Maksimal mengikuti kuota warna yang dipilih.</p>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
-                        🛒 + Masukkan ke Keranjang
-                    </button>
+                    @if($availableVariations->isNotEmpty())
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                            🛒 + Masukkan ke Keranjang PO
+                        </button>
+                    @else
+                        <div class="w-full bg-gray-200 text-gray-500 py-4 rounded-xl font-bold text-center">
+                            Kuota Pre-Order Belum Tersedia
+                        </div>
+                    @endif
                 </form>
 
                 <!-- ========================================== -->
@@ -84,9 +106,9 @@
                     $productUrl = route('product.show', $product->id); 
                     
                     // Menyusun pesan dengan menambahkan link produk
-                    $waMessage = "Halo Admin SPORT CENTER, saya tertarik dengan produk *" . $product->name . "*.\n\n"
+                    $waMessage = "Halo Admin PASHMINA PO, saya tertarik pre-order produk *" . $product->name . "*.\n\n"
                                . "Link Produk: " . $productUrl . "\n\n"
-                               . "Apakah stok ukurannya masih lengkap?";
+                               . "Apakah kuota pre-order warnanya masih tersedia?";
                                
                     $waLink = "https://wa.me/" . $waNumber . "?text=" . rawurlencode($waMessage);
                 @endphp
@@ -143,7 +165,7 @@
 
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Komentar & Pengalaman</label>
-                        <textarea name="comment" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Bagaimana kualitas sepatunya? Apakah ukurannya pas?" required></textarea>
+                        <textarea name="comment" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Bagaimana kualitas bahan, warna, dan kenyamanan pashminanya?" required></textarea>
                     </div>
 
                     <div class="mb-4">
@@ -226,6 +248,36 @@
             Butuh Bantuan? Chat Kami!
         </span>
     </a>
+
+    <script>
+        const quantityInput = document.getElementById('quantity');
+        const decreaseQty = document.getElementById('decreaseQty');
+        const increaseQty = document.getElementById('increaseQty');
+        const variationInputs = document.querySelectorAll('input[name="variation_id"]');
+
+        function selectedStock() {
+            const selected = document.querySelector('input[name="variation_id"]:checked');
+            return selected ? Number(selected.dataset.stock || 1) : 1;
+        }
+
+        function clampQuantity() {
+            if (!quantityInput) return;
+            const maxStock = Math.max(selectedStock(), 1);
+            const currentValue = Number(quantityInput.value || 1);
+            quantityInput.max = maxStock;
+            quantityInput.value = Math.min(Math.max(currentValue, 1), maxStock);
+        }
+
+        variationInputs.forEach((input) => input.addEventListener('change', clampQuantity));
+        decreaseQty?.addEventListener('click', () => {
+            quantityInput.value = Math.max(Number(quantityInput.value || 1) - 1, 1);
+        });
+        increaseQty?.addEventListener('click', () => {
+            quantityInput.value = Math.min(Number(quantityInput.value || 1) + 1, selectedStock());
+        });
+        quantityInput?.addEventListener('input', clampQuantity);
+        clampQuantity();
+    </script>
 
 </body>
 </html>

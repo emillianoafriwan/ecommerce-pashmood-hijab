@@ -53,8 +53,8 @@ Route::middleware(['auth'])->group(function () {
             // PERBAIKAN: Hitung pendapatan dari pesanan yang sudah dibayar, dikirim, ATAU selesai
             $totalRevenue = Order::whereIn('status', ['paid', 'shipped', 'completed'])->sum('total_price');
             
-            // Pesanan yang masih tertunda atau menunggu verifikasi
-            $pendingOrders = Order::whereIn('status', ['pending', 'waiting'])->count();
+            // Pre-order yang masih menunggu pembayaran atau verifikasi
+            $pendingOrders = Order::whereIn('status', ['pre_order', 'pending', 'waiting'])->count();
             
             // PERBAIKAN: Hitung pesanan yang statusnya benar-benar 'completed'
             $completedOrders = Order::where('status', 'completed')->count();
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     
     // Manajemen Toko
-    Route::resource('categories', CategoryController::class);
+    Route::resource('categories', CategoryController::class)->except(['show']);
     Route::resource('products', ProductController::class);
     
     // Daftar Pesanan Admin

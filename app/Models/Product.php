@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -32,5 +33,27 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class)->latest(); // Ambil ulasan dari yang terbaru
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function imageUrl(): string
+    {
+        if (!$this->image_path) {
+            return asset('images/pashmina-voal.svg');
+        }
+
+        if (Str::startsWith($this->image_path, ['http://', 'https://'])) {
+            return $this->image_path;
+        }
+
+        if (Str::startsWith($this->image_path, 'images/')) {
+            return asset($this->image_path);
+        }
+
+        return asset('storage/' . $this->image_path);
     }
 }
