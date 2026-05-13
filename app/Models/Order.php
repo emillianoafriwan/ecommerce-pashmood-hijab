@@ -17,7 +17,9 @@ class Order extends Model
         'phone', 
         'payment_proof',
         'courier',
-            'resi_number' // Tambahkan ini
+        'resi_number',
+        'rejection_reason',
+        'cancellation_reason',
     ];
 
     public function user()

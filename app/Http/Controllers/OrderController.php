@@ -76,7 +76,7 @@ class OrderController extends Controller
     // 4. Menampilkan detail pesanan (Sisi User)
     public function show($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
         return view('orders.show', compact('order'));
     }
 
@@ -94,9 +94,14 @@ class OrderController extends Controller
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
+        $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+        if (!in_array($order->status, ['pre_order', 'pending'])) {
+            return back()->with('error', 'Bukti pembayaran tidak dapat dikirim untuk status pesanan ini.');
+        }
+
         $path = $request->file('payment_proof')->store('proofs', 'public');
 
-        $order = Order::findOrFail($id);
         $order->update([
             'status' => 'waiting', 
             'payment_proof' => $path,
@@ -104,6 +109,47 @@ class OrderController extends Controller
         ]);
 
         return redirect()->route('order.detail', $id)->with('success', 'Bukti dikirim, menunggu verifikasi Admin!');
+    }
+
+    // Pembeli membatalkan pesanan sebelum pembayaran diverifikasi
+    public function cancel(Request $request, $id)
+    {
+        $request->validate([
+            'cancellation_reason' => 'required|string|min:5|max:1000',
+        ], [
+            'cancellation_reason.required' => 'Alasan pembatalan wajib diisi.',
+            'cancellation_reason.min' => 'Alasan pembatalan minimal 5 karakter.',
+        ]);
+
+        $order = Order::with('orderItems')
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if (!in_array($order->status, ['pre_order', 'pending', 'waiting'])) {
+            return back()->with('error', 'Pesanan ini sudah tidak dapat dibatalkan.');
+        }
+
+        DB::transaction(function () use ($order, $request) {
+            foreach ($order->orderItems as $item) {
+                if ($item->variation_id) {
+                    \App\Models\ProductVariation::where('id', $item->variation_id)
+                        ->increment('stock', $item->quantity);
+                }
+            }
+
+            if ($order->payment_proof) {
+                Storage::delete('public/' . $order->payment_proof);
+            }
+
+            $order->update([
+                'status' => 'canceled',
+                'payment_proof' => null,
+                'cancellation_reason' => $request->cancellation_reason,
+            ]);
+        });
+
+        return redirect()->route('order.detail', $order->id)->with('success', 'Pesanan berhasil dibatalkan.');
     }
 
     // 7. Approve oleh Admin (Status menjadi 'paid')
@@ -138,9 +184,22 @@ class OrderController extends Controller
             'rejection_reason' => $request->reason // Simpan alasan penolakan
         ]);
 
-        Mail::to($order->user->email)->send(new PaymentRejectedMail($order));
+        $emailSent = false;
 
-        return redirect()->route('admin.orders')->with('success', 'Pesanan ditolak. Catatan telah dikirim ke pembeli.');
+        if ($order->user && filter_var($order->user->email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($order->user->email)->send(new PaymentRejectedMail($order));
+                $emailSent = true;
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        $message = $emailSent
+            ? 'Pesanan ditolak. Catatan telah dikirim ke pembeli.'
+            : 'Pesanan ditolak, tetapi email pemberitahuan tidak terkirim karena alamat email pembeli tidak valid atau layanan email bermasalah.';
+
+        return redirect()->route('admin.orders')->with('success', $message);
     }
 
     // 9. Riwayat Pesanan User

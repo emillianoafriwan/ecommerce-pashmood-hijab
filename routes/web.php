@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     // Rute Pesanan
     Route::get('/order/{id}', [OrderController::class, 'show'])->name('order.detail');
     Route::post('/order/confirm/{id}', [OrderController::class, 'confirm'])->name('order.confirm');
+    Route::post('/order/cancel/{id}', [OrderController::class, 'cancel'])->name('order.cancel');
     Route::get('/my-orders', [OrderController::class, 'history'])->name('orders.history');
     
     // Konfirmasi pesanan diterima oleh pembeli
