@@ -71,7 +71,7 @@
                 <select name="category" class="hidden md:block px-6 py-4 text-slate-500 font-medium cursor-pointer border-l border-slate-100">
                     <option value="">Semua Bahan</option>
                     @foreach($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                     @endforeach
                 </select>
                 
@@ -137,19 +137,22 @@
 
         <!-- MAIN CATALOG -->
         <div class="mb-20">
+            @php
+                $activeSortClass = 'bg-slate-900 text-white';
+                $inactiveSortClass = 'bg-white text-slate-500 border border-slate-200 hover:border-rose-300';
+            @endphp
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <h2 class="text-3xl font-extrabold text-slate-800">Katalog Utama</h2>
                 <div class="flex gap-4 overflow-x-auto pb-2 hide-scroll">
-                    <button class="bg-slate-900 text-white px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap">Semua</button>
-                    <button class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Terbaru</button>
-                    <button class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Best Seller</button>
+                    <button type="button" data-sort-button="all" class="{{ $activeSortClass }} px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">Semua</button>
+                    <button type="button" data-sort-button="latest" class="{{ $inactiveSortClass }} px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">Terbaru</button>
+                    <button type="button" data-sort-button="best_seller" class="{{ $inactiveSortClass }} px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap transition">Best Seller</button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+            <div id="productCatalog" class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
                 @forelse($products as $product)
-                <!-- PERBAIKAN DI SINI: Mengganti <div> menjadi <a> tag -->
-                <a href="{{ route('product.show', $product->id) }}" class="group block cursor-pointer">
+                <a href="{{ route('product.show', $product->id) }}" class="group block cursor-pointer" data-product-card data-name="{{ strtolower($product->name) }}" data-created-at="{{ $product->created_at?->timestamp ?? 0 }}" data-sold-count="{{ $product->sold_count ?? 0 }}">
                     <div class="relative rounded-3xl overflow-hidden bg-rose-50 aspect-[4/5] mb-4">
                         <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                         <div class="absolute bottom-4 right-4 bg-white p-3 rounded-2xl shadow-xl opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition duration-300">
@@ -197,5 +200,48 @@
         </div>
     </a>
 
+    <script>
+        const catalog = document.getElementById('productCatalog');
+        const sortButtons = document.querySelectorAll('[data-sort-button]');
+        const activeSortClass = ['bg-slate-900', 'text-white'];
+        const inactiveSortClass = ['bg-white', 'text-slate-500', 'border', 'border-slate-200', 'hover:border-rose-300'];
+
+        function setActiveSort(activeButton) {
+            sortButtons.forEach((button) => {
+                button.classList.remove(...activeSortClass, ...inactiveSortClass);
+                button.classList.add(...(button === activeButton ? activeSortClass : inactiveSortClass));
+            });
+        }
+
+        function sortCatalog(sortType) {
+            if (!catalog) return;
+
+            const cards = Array.from(catalog.querySelectorAll('[data-product-card]'));
+
+            cards.sort((firstCard, secondCard) => {
+                if (sortType === 'latest') {
+                    return Number(secondCard.dataset.createdAt) - Number(firstCard.dataset.createdAt);
+                }
+
+                if (sortType === 'best_seller') {
+                    const soldDiff = Number(secondCard.dataset.soldCount) - Number(firstCard.dataset.soldCount);
+                    return soldDiff || Number(secondCard.dataset.createdAt) - Number(firstCard.dataset.createdAt);
+                }
+
+                return firstCard.dataset.name.localeCompare(secondCard.dataset.name);
+            });
+
+            cards.forEach((card) => catalog.appendChild(card));
+        }
+
+        sortButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveSort(button);
+                sortCatalog(button.dataset.sortButton);
+            });
+        });
+    </script>
+
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

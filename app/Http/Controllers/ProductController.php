@@ -46,27 +46,21 @@ class ProductController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'variations' => 'required|array',
             'variations.*.color' => 'required',
-            'variations.*.stock' => 'required|integer|min:0',
         ]);
 
         $imagePath = $request->file('image')->store('products', 'public');
-
-        // Hitung total stok dari semua variasi agar data sinkron
-        $totalStock = collect($request->variations)->sum('stock');
 
         $product = Product::create([
             'category_id' => $request->category_id,
             'name'        => $request->name,
             'slug'        => $request->slug,
             'price'       => $request->price,
-            'stock'       => $totalStock, // Gunakan total dari variasi
             'image_path'  => $imagePath,
         ]);
 
         foreach ($request->variations as $var) {
             $product->variations()->create([
                 'color' => $var['color'],
-                'stock' => $var['stock'],
             ]);
         }
 
@@ -89,7 +83,7 @@ class ProductController extends Controller
             'price' => 'required|numeric',
             'image' => 'image|mimes:jpeg,png,jpg|max:2048',
             'variations' => 'required|array',
-            'variations.*.stock' => 'required|integer|min:0',
+            'variations.*.color' => 'required',
         ]);
 
         if ($request->hasFile('image')) {
@@ -99,35 +93,28 @@ class ProductController extends Controller
             $product->image_path = $request->file('image')->store('products', 'public');
         }
 
-        // TAHAP 1: Update Variasi (Gunakan updateOrCreate agar ID tidak berubah-ubah)
+        // Update variasi warna PO.
         $keepIds = [];
         foreach ($request->variations as $var) {
             $updatedVar = $product->variations()->updateOrCreate(
-                ['id' => $var['id'] ?? null], // Cari berdasarkan ID jika ada
+                ['id' => $var['id'] ?? null],
                 [
                     'color' => $var['color'],
-                    'stock' => $var['stock']
                 ]
             );
             $keepIds[] = $updatedVar->id;
         }
 
-        // Hapus variasi yang tidak ada di form (jika Bos menghapus baris warna di form edit)
         $product->variations()->whereNotIn('id', $keepIds)->delete();
 
-        // TAHAP 2: Hitung ulang total stok produk utama
-        $totalStock = $product->variations()->sum('stock');
-
-        // TAHAP 3: Update Data Produk Utama
         $product->update([
             'category_id' => $request->category_id,
             'name'        => $request->name,
             'slug'        => $request->slug,
             'price'       => $request->price,
-            'stock'       => $totalStock, // Stok produk utama otomatis ngikut total variasi
         ]);
 
-        return redirect()->route('products.index')->with('success', 'Produk dan Stok Variasi berhasil diperbarui!');
+        return redirect()->route('products.index')->with('success', 'Produk dan variasi berhasil diperbarui!');
     }
 
     public function destroy(Product $product)

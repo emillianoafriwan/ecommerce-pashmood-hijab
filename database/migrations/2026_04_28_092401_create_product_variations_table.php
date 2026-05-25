@@ -15,7 +15,6 @@ return new class extends Migration
         $table->id();
         $table->foreignId('product_id')->constrained()->onDelete('cascade');
         $table->string('color'); // Contoh: Sage Green
-        $table->integer('stock')->default(0);
         $table->timestamps();
     });
 }

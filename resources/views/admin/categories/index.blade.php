@@ -132,6 +132,6 @@
         </div>
 
     </main>
-
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

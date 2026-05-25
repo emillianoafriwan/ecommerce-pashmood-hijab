@@ -70,14 +70,12 @@
                 </p>
 
                 @php
-                    $availableVariations = $product->variations->where('stock', '>', 0)->values();
-                    $firstAvailableVariationId = optional($availableVariations->first())->id;
-                    $firstAvailableStock = optional($availableVariations->first())->stock ?? 1;
+                    $firstAvailableVariationId = optional($product->variations->first())->id;
                 @endphp
 
                 @if(auth()->check() && auth()->user()->role === 'admin')
                     <div class="bg-slate-50 border border-slate-100 rounded-[2rem] p-6">
-                        <p class="text-sm text-slate-500 font-medium mb-5">Akun admin tidak melakukan checkout dari katalog. Gunakan panel produk untuk mengubah detail, harga, gambar, dan stok variasi.</p>
+                        <p class="text-sm text-slate-500 font-medium mb-5">Akun admin tidak melakukan checkout dari katalog. Gunakan panel produk untuk mengubah detail, harga, gambar, dan variasi.</p>
                         <div class="flex flex-col sm:flex-row gap-4">
                             <a href="{{ route('products.edit', $product->id) }}" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
                                 Edit Produk Ini
@@ -97,16 +95,13 @@
                             <div class="flex flex-wrap gap-3">
                                 @forelse($product->variations as $variation)
                                     <label class="relative cursor-pointer group">
-                                        <input type="radio" name="variation_id" value="{{ $variation->id }}" data-stock="{{ $variation->stock }}" class="peer hidden" {{ $variation->stock <= 0 ? 'disabled' : '' }} {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
-                                        <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200 {{ $variation->stock <= 0 ? 'opacity-40 cursor-not-allowed bg-slate-50' : '' }}">
+                                        <input type="radio" name="variation_id" value="{{ $variation->id }}" class="peer hidden" {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
+                                        <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200">
                                             {{ $variation->color }}
-                                            <span class="block text-[9px] font-medium text-slate-400 mt-1 uppercase">
-                                                {{ $variation->stock > 0 ? 'Kuota: ' . $variation->stock : 'Habis' }}
-                                            </span>
                                         </div>
                                     </label>
                                 @empty
-                                    <p class="text-sm text-rose-500">Stok variasi sedang diproses.</p>
+                                    <p class="text-sm text-rose-500">Variasi warna sedang diproses.</p>
                                 @endforelse
                             </div>
                         </div>
@@ -115,7 +110,7 @@
                         <div class="flex flex-col sm:flex-row gap-4">
                             <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
                                 <button type="button" id="decreaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">-</button>
-                                <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $firstAvailableStock }}" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
+                                <input type="number" name="quantity" id="quantity" value="1" min="1" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
                                 <button type="button" id="increaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">+</button>
                             </div>
                             
@@ -129,7 +124,7 @@
 
                 <div class="mt-8 flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-rose-50 pt-8">
                     <div class="flex items-center gap-2">✨ Premium Material</div>
-                    <div class="flex items-center gap-2">🕒 Est. Ready 7 Days</div>
+                    {{-- <div class="flex items-center gap-2">🕒 Est. Ready 7 Days</div> --}}
                 </div>
             </div>
         </div>
@@ -226,32 +221,20 @@
     </a>
 
     <script>
-        // Script logika quantity tetap sama, hanya menyesuaikan ID jika diperlukan
         const quantityInput = document.getElementById('quantity');
         const decreaseQty = document.getElementById('decreaseQty');
         const increaseQty = document.getElementById('increaseQty');
-        const variationInputs = document.querySelectorAll('input[name="variation_id"]');
-
-        function selectedStock() {
-            const selected = document.querySelector('input[name="variation_id"]:checked');
-            return selected ? Number(selected.dataset.stock || 1) : 1;
-        }
 
         if (quantityInput) {
-            variationInputs.forEach((input) => input.addEventListener('change', () => {
-                const maxStock = selectedStock();
-                quantityInput.max = maxStock;
-                if(Number(quantityInput.value) > maxStock) quantityInput.value = maxStock;
-            }));
-
             decreaseQty?.addEventListener('click', () => {
                 if(Number(quantityInput.value) > 1) quantityInput.value = Number(quantityInput.value) - 1;
             });
 
             increaseQty?.addEventListener('click', () => {
-                if(Number(quantityInput.value) < selectedStock()) quantityInput.value = Number(quantityInput.value) + 1;
+                quantityInput.value = Number(quantityInput.value) + 1;
             });
         }
     </script>
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

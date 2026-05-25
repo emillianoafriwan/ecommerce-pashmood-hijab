@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\ProductVariation; // Wajib import ini!
+use App\Models\ProductVariation;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
@@ -33,43 +33,28 @@ class CartController extends Controller
         // 2. Validasi input warna & jumlah pembelian
         $request->validate([
             'variation_id' => 'required|exists:product_variations,id',
-            'quantity'     => 'required|integer|min:1' // Wajib berupa angka minimal 1
+            'quantity'     => 'required|integer|min:1'
         ]);
 
         $product = Product::findOrFail($id);
         $variation = ProductVariation::findOrFail($request->variation_id);
         
-        // Menangkap jumlah yang diketik pembeli dari form HTML
         $quantity = $request->input('quantity', 1);
-
-        // Validasi Keamanan: Cek apakah jumlah pembelian melebihi stok variasi yang dipilih
-        if ($quantity > $variation->stock) {
-            return back()->with('error', 'Maaf, jumlah pre-order melebihi sisa kuota warna yang tersedia!');
-        }
 
         $cart = session()->get('cart', []);
 
         // 3. Kunci Unik (ID Produk + ID Variasi) agar beda warna tidak bertumpuk
         $cartKey = $id . '_' . $variation->id;
 
-        // 4. Logika Keranjang dengan Quantity Dinamis
         if(isset($cart[$cartKey])) {
-            // Jika sudah ada di keranjang, jumlahkan yang lama dengan yang baru
             $newQuantity = $cart[$cartKey]['quantity'] + $quantity;
-            
-            // Validasi Keamanan Lapis 2: Cek total tumpukan di keranjang vs sisa stok asli
-            if ($newQuantity > $variation->stock) {
-                return back()->with('error', 'Total pashmina ini di keranjang Anda melebihi sisa kuota warna!');
-            }
-            
             $cart[$cartKey]['quantity'] = $newQuantity;
         } else {
-            // Jika belum ada, buat entri baru dengan jumlah sesuai inputan
             $cart[$cartKey] = [
                 "name"         => $product->name,
-                "color"        => $variation->color, // Menyimpan warna yang dipilih
-                "variation_id" => $variation->id,    // Menyimpan ID variasi
-                "quantity"     => $quantity,         // Menggunakan quantity dari input form
+                "color"        => $variation->color,
+                "variation_id" => $variation->id,
+                "quantity"     => $quantity,
                 "price"        => $product->price,
                 "image"        => $product->imageUrl()
             ];

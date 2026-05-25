@@ -73,9 +73,6 @@ class OrderController extends Controller
                     'quantity'     => $details['quantity'],
                     'price'        => $details['price'],
                 ]);
-                
-                // Kurangi kuota stok variasi agar slot pre-order tidak melebihi persediaan
-                \App\Models\ProductVariation::where('id', $variationId)->decrement('stock', $details['quantity']);
             }
         });
 
@@ -141,13 +138,6 @@ class OrderController extends Controller
         }
 
         DB::transaction(function () use ($order, $request) {
-            foreach ($order->orderItems as $item) {
-                if ($item->variation_id) {
-                    \App\Models\ProductVariation::where('id', $item->variation_id)
-                        ->increment('stock', $item->quantity);
-                }
-            }
-
             if ($order->payment_proof) {
                 Storage::delete('public/' . $order->payment_proof);
             }

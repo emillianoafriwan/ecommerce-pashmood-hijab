@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Tambah Produk Baru</h1>
-                    <p class="text-slate-500 mt-2 font-medium text-sm">Masukkan detail produk, harga, kuota stok, dan variasi warna untuk koleksi pre-order.</p>
+                    <p class="text-slate-500 mt-2 font-medium text-sm">Masukkan detail produk, harga, dan variasi warna untuk koleksi pre-order.</p>
                 </div>
             </div>
 
@@ -95,30 +95,20 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                        <label for="price" class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Harga (Rp)</label>
-                        <input type="number" name="price" id="price" value="{{ old('price') }}" required min="0"
-                            class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold bg-slate-50 focus:bg-white">
-                        @error('price')
-                            <p class="text-rose-500 text-xs mt-2 font-bold">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="stock" class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Stok Total</label>
-                        <input type="number" name="stock" id="stock" value="{{ old('stock') }}" required min="0"
-                            class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold bg-slate-50 focus:bg-white">
-                        @error('stock')
-                            <p class="text-rose-500 text-xs mt-2 font-bold">{{ $message }}</p>
-                        @enderror
-                    </div>
+                <div class="mb-8">
+                    <label for="price" class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Harga (Rp)</label>
+                    <input type="number" name="price" id="price" value="{{ old('price') }}" required min="0"
+                        class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold bg-slate-50 focus:bg-white">
+                    @error('price')
+                        <p class="text-rose-500 text-xs mt-2 font-bold">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-8 p-5 md:p-6 bg-rose-50/60 border border-rose-100 rounded-[2rem]">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
                         <div>
-                            <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Variasi Warna & Stok</h2>
-                            <p class="text-xs text-slate-500 font-medium mt-1">Tambahkan stok untuk setiap warna produk.</p>
+                            <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Variasi Warna</h2>
+                            <p class="text-xs text-slate-500 font-medium mt-1">Tambahkan pilihan warna yang tersedia untuk pre-order.</p>
                         </div>
                         <button type="button" onclick="addRow()" class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 transition gap-2 w-full sm:w-auto">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,9 +119,8 @@
                     </div>
 
                     <div id="variation-container" class="space-y-3">
-                        <div class="variation-row grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm">
+                        <div class="variation-row grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm">
                             <input type="text" name="variations[0][color]" placeholder="Warna" class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-bold text-slate-700 bg-slate-50 focus:bg-white" required>
-                            <input type="number" name="variations[0][stock]" placeholder="Stok Warna Ini" min="0" class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-bold text-slate-700 bg-slate-50 focus:bg-white" required>
                             <button type="button" class="h-12 w-12 inline-flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" onclick="removeRow(this)" title="Hapus Warna">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -175,10 +164,9 @@
         function addRow() {
             const container = document.getElementById('variation-container');
             const newRow = document.createElement('div');
-            newRow.className = 'variation-row grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm';
+            newRow.className = 'variation-row grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm';
             newRow.innerHTML = `
                 <input type="text" name="variations[${rowCount}][color]" placeholder="Warna" class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-bold text-slate-700 bg-slate-50 focus:bg-white" required>
-                <input type="number" name="variations[${rowCount}][stock]" placeholder="Stok Warna Ini" min="0" class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-bold text-slate-700 bg-slate-50 focus:bg-white" required>
                 <button type="button" class="h-12 w-12 inline-flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" onclick="removeRow(this)" title="Hapus Warna">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -196,5 +184,6 @@
             }
         }
     </script>
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

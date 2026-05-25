@@ -40,7 +40,7 @@
         <div class="max-w-4xl mx-auto px-4 text-center">
             <p class="text-rose-600 font-bold tracking-widest text-xs uppercase mb-4">Kelola Katalog</p>
             <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">Koleksi Pashmina <span class="text-rose-600">PASHMOOD</span></h1>
-            <p class="text-slate-500 mb-10 text-lg">Atur tampilan produk, harga, kategori, dan kuota pre-order dengan nuansa katalog pembeli.</p>
+            <p class="text-slate-500 mb-10 text-lg">Atur tampilan produk, harga, kategori, dan variasi pre-order dengan nuansa katalog pembeli.</p>
 
             <form action="{{ route('products.index') }}" method="GET" class="flex flex-col md:flex-row gap-2 bg-white p-2 rounded-3xl shadow-2xl shadow-rose-100 border border-rose-50">
                 <input type="text" name="search" value="{{ request('search') }}"
@@ -96,8 +96,8 @@
                 <p class="text-3xl font-black text-slate-900">{{ $products->count() }}</p>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-rose-50 shadow-sm">
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Total Kuota</p>
-                <p class="text-3xl font-black text-slate-900">{{ $products->sum(fn($product) => $product->variations->sum('stock')) }}</p>
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Total Variasi</p>
+                <p class="text-3xl font-black text-slate-900">{{ $products->sum(fn($product) => $product->variations->count()) }}</p>
             </div>
             <a href="{{ route('products.create') }}" class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl hover:bg-slate-800 transition group">
                 <p class="text-[10px] font-black uppercase tracking-widest text-rose-300 mb-2">Aksi Cepat</p>
@@ -124,17 +124,13 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
                     @foreach($products as $product)
-                        @php
-                            $totalStock = $product->variations->sum('stock');
-                            $isOutOfStock = $totalStock <= 0;
-                        @endphp
                         <article class="group">
                             <div class="relative rounded-3xl overflow-hidden bg-rose-50 aspect-[4/5] mb-4 shadow-sm border border-rose-50">
                                 <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                                 <div class="absolute top-4 left-4 flex flex-wrap gap-2">
                                     <span class="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter text-rose-600 shadow-sm">Pre-Order</span>
-                                    <span class="{{ $isOutOfStock ? 'bg-rose-600 text-white' : 'bg-slate-900/90 text-white' }} backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">
-                                        {{ $isOutOfStock ? 'Habis' : $totalStock . ' Kuota' }}
+                                    <span class="bg-slate-900/90 text-white backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">
+                                        {{ $product->variations->count() }} Variasi
                                     </span>
                                 </div>
 
@@ -170,7 +166,7 @@
                                 <div class="mt-4 flex gap-2 overflow-x-auto hide-scroll pb-1">
                                     @forelse($product->variations as $variation)
                                         <span class="shrink-0 bg-white border border-slate-100 px-3 py-2 rounded-2xl text-[10px] font-black text-slate-500">
-                                            {{ $variation->color }} <span class="text-rose-500">{{ $variation->stock }}</span>
+                                            {{ $variation->color }}
                                         </span>
                                     @empty
                                         <span class="text-xs font-bold text-rose-500">Belum ada variasi</span>
@@ -192,5 +188,6 @@
             </div>
         @endif
     </main>
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

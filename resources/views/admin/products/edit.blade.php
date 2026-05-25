@@ -45,7 +45,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Edit Produk</h1>
-                    <p class="text-slate-500 mt-2 font-medium text-sm">Perbarui detail produk, harga, stok warna, dan gambar koleksi pre-order.</p>
+                    <p class="text-slate-500 mt-2 font-medium text-sm">Perbarui detail produk, harga, variasi warna, dan gambar koleksi pre-order.</p>
                 </div>
             </div>
 
@@ -107,25 +107,19 @@
 
                 <div class="mb-8 p-5 md:p-6 bg-rose-50/60 border border-rose-100 rounded-[2rem]">
                     <div class="mb-5">
-                        <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Stok Per Warna</h2>
-                        <p class="text-xs text-slate-500 font-medium mt-1">Total stok utama akan dihitung otomatis dari stok variasi saat produk diperbarui.</p>
+                        <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Variasi Warna</h2>
+                        <p class="text-xs text-slate-500 font-medium mt-1">Kelola pilihan warna yang tersedia untuk pre-order.</p>
                     </div>
                     
                     <div class="space-y-3">
                         @foreach($product->variations as $index => $variation)
-                            <div class="grid grid-cols-1 md:grid-cols-[1fr_160px] gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm">
+                            <div class="grid grid-cols-1 gap-3 bg-white p-4 rounded-2xl border border-rose-100 shadow-sm">
                                 <input type="hidden" name="variations[{{ $index }}][id]" value="{{ $variation->id }}">
                                 
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Warna</label>
                                     <input type="text" name="variations[{{ $index }}][color]" value="{{ $variation->color }}" 
-                                        class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 outline-none text-sm font-bold text-slate-500 bg-slate-100" readonly>
-                                </div>
-
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Stok</label>
-                                    <input type="number" name="variations[{{ $index }}][stock]" value="{{ $variation->stock }}" 
-                                        class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-black text-slate-800 bg-slate-50 focus:bg-white text-center" required min="0">
+                                        class="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none text-sm font-bold text-slate-700 bg-slate-50 focus:bg-white" required>
                                 </div>
                             </div>
                         @endforeach
@@ -169,5 +163,6 @@
             document.getElementById('slug').value = slugStr;
         }
     </script>
+    <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>
 </html>

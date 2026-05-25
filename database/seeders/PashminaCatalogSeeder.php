@@ -34,8 +34,8 @@ class PashminaCatalogSeeder extends Seeder
                 'image_path' => 'images/pashmina-voal.svg',
                 'description' => 'Pashmina voal premium dengan tekstur ringan, mudah dibentuk, dan warna dusty rose yang lembut untuk tampilan harian.',
                 'variations' => [
-                    ['color' => 'Dusty Rose', 'stock' => 24],
-                    ['color' => 'Mauve', 'stock' => 18],
+                    ['color' => 'Dusty Rose'],
+                    ['color' => 'Mauve'],
                 ],
             ],
             [
@@ -45,8 +45,8 @@ class PashminaCatalogSeeder extends Seeder
                 'image_path' => 'images/pashmina-ceruty.svg',
                 'description' => 'Pashmina ceruty babydoll yang jatuh, flowy, dan nyaman untuk acara santai maupun semi-formal.',
                 'variations' => [
-                    ['color' => 'Sage', 'stock' => 20],
-                    ['color' => 'Olive', 'stock' => 15],
+                    ['color' => 'Sage'],
+                    ['color' => 'Olive'],
                 ],
             ],
             [
@@ -56,8 +56,8 @@ class PashminaCatalogSeeder extends Seeder
                 'image_path' => 'images/pashmina-silk.svg',
                 'description' => 'Pashmina silk premium dengan tampilan mengilap elegan, cocok untuk acara spesial dan koleksi warna netral.',
                 'variations' => [
-                    ['color' => 'Champagne', 'stock' => 17],
-                    ['color' => 'Latte', 'stock' => 14],
+                    ['color' => 'Champagne'],
+                    ['color' => 'Latte'],
                 ],
             ],
             [
@@ -67,8 +67,8 @@ class PashminaCatalogSeeder extends Seeder
                 'image_path' => 'images/pashmina-voal.svg',
                 'description' => 'Pashmina voal warna white gold yang bersih dan elegan, mudah dipadukan dengan outfit polos maupun motif.',
                 'variations' => [
-                    ['color' => 'White Gold', 'stock' => 22],
-                    ['color' => 'Ivory', 'stock' => 16],
+                    ['color' => 'White Gold'],
+                    ['color' => 'Ivory'],
                 ],
             ],
             [
@@ -78,8 +78,8 @@ class PashminaCatalogSeeder extends Seeder
                 'image_path' => 'images/pashmina-silk.svg',
                 'description' => 'Pashmina silk black gold dengan kilau lembut dan bahan yang terasa mewah untuk tampilan formal.',
                 'variations' => [
-                    ['color' => 'Black Gold', 'stock' => 12],
-                    ['color' => 'Espresso', 'stock' => 10],
+                    ['color' => 'Black Gold'],
+                    ['color' => 'Espresso'],
                 ],
             ],
         ];
@@ -95,7 +95,6 @@ class PashminaCatalogSeeder extends Seeder
                 'slug' => Str::slug($item['name']),
                 'description' => $item['description'],
                 'price' => $item['price'],
-                'stock' => collect($item['variations'])->sum('stock'),
                 'image_path' => $item['image_path'],
             ]);
 
