@@ -46,9 +46,9 @@
                 <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Selamat Datang, {{ explode(' ', auth()->user()->name)[0] }}!</h2>
                 <p class="text-slate-400 text-sm md:text-base max-w-lg leading-relaxed">Kelola pesanan, perbarui profil, dan nikmati pengalaman berbelanja koleksi pashmina eksklusif kami.</p>
             </div>
-            <a href="{{ route('shop.index') }}" class="relative z-10 bg-rose-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-rose-500 transition shadow-lg shadow-rose-900/50 flex items-center gap-3 whitespace-nowrap w-full md:w-auto justify-center">
+            <a href="{{ auth()->user()->role == 'admin' ? route('products.index') : route('shop.index') }}" class="relative z-10 bg-rose-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-rose-500 transition shadow-lg shadow-rose-900/50 flex items-center gap-3 whitespace-nowrap w-full md:w-auto justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                Kunjungi Toko
+                {{ auth()->user()->role == 'admin' ? 'Kelola Produk' : 'Kunjungi Toko' }}
             </a>
         </div>
 

@@ -105,6 +105,25 @@
                                    class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold placeholder-slate-300" 
                                    placeholder="Contoh: 0812xxxxxx">
                         </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Pilih Jasa Pengiriman</label>
+                            <div class="relative">
+                                <select name="courier" required class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 outline-none cursor-pointer text-slate-700 font-bold bg-white appearance-none">
+                                    <option value="" disabled {{ old('courier') ? '' : 'selected' }}>Pilih kurir untuk pesanan ini</option>
+                                    <option value="JNE Express" {{ old('courier') == 'JNE Express' ? 'selected' : '' }}>JNE Express</option>
+                                    <option value="J&T Express" {{ old('courier') == 'J&T Express' ? 'selected' : '' }}>J&T Express</option>
+                                    <option value="Sicepat" {{ old('courier') == 'Sicepat' ? 'selected' : '' }}>Sicepat</option>
+                                    <option value="Anteraja" {{ old('courier') == 'Anteraja' ? 'selected' : '' }}>Anteraja</option>
+                                </select>
+                                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </div>
+                            @error('courier')
+                                <p class="text-rose-600 text-xs font-bold mt-2">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
 

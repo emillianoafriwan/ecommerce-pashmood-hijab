@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Detail Order #{{ $order->id }} | AMORA</title>
+    <title>Admin - Detail Order #{{ $order->id }} | PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -37,7 +37,7 @@
                     <span class="px-5 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full 
                         {{ $order->status == 'paid' ? 'bg-emerald-100 text-emerald-700' : 
                            ($order->status == 'waiting' ? 'bg-amber-100 text-amber-700' : 
-                           ($order->status == 'completed' ? 'bg-indigo-100 text-indigo-700' : 
+                           ($order->status == 'completed' ? 'bg-slate-100 text-slate-700' : 
                            ($order->status == 'shipped' ? 'bg-blue-100 text-blue-700' :
                            ($order->status == 'canceled' ? 'bg-slate-100 text-slate-600' : 'bg-rose-100 text-rose-700')))) }}">
                         {{ $order->statusIndo() }}
@@ -140,9 +140,9 @@
                         <p class="text-sm text-blue-700 leading-relaxed">Menunggu pembeli mengonfirmasi bahwa paket sudah diterima.</p>
                     </div>
                 @elseif($order->status == 'completed')
-                    <div class="bg-indigo-50 border border-indigo-100 rounded-3xl p-6">
-                        <p class="font-extrabold text-indigo-800 mb-2">Pesanan selesai</p>
-                        <p class="text-sm text-indigo-700 leading-relaxed">Tidak ada aksi lanjutan yang diperlukan untuk pesanan ini.</p>
+                    <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6">
+                        <p class="font-extrabold text-slate-800 mb-2">Pesanan selesai</p>
+                        <p class="text-sm text-slate-600 leading-relaxed">Tidak ada aksi lanjutan yang diperlukan untuk pesanan ini.</p>
                     </div>
                 @elseif($order->status == 'canceled')
                     <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6">
@@ -161,7 +161,7 @@
             <!-- KOTAK LOGISTIK & PENGIRIMAN -->
             <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
                 <div class="flex items-center gap-3 mb-8">
-                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     </div>
                     <h3 class="font-extrabold text-slate-800 text-lg">Manajemen Pengiriman</h3>
@@ -174,22 +174,19 @@
                             @csrf
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Pilih Jasa Kurir</label>
-                                    <select name="courier" class="w-full px-5 py-3.5 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none font-bold text-slate-700" required>
-                                        <option value="JNE">JNE Express</option>
-                                        <option value="J&T Express">J&T Express</option>
-                                        <option value="Sicepat">Sicepat</option>
-                                        <option value="Anteraja">Anteraja</option>
-                                    </select>
+                                    <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Jasa Kurir Pilihan Pembeli</label>
+                                    <div class="w-full px-5 py-3.5 rounded-2xl bg-white ring-1 ring-slate-200 text-slate-700 font-extrabold">
+                                        {{ $order->courier ?? 'Belum dipilih' }}
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Nomor Resi</label>
                                     <div class="w-full px-5 py-3.5 rounded-2xl bg-slate-200 text-slate-500 text-xs font-bold flex items-center italic">
-                                        Otomatis dibuat oleh sistem AMORA
+                                        Otomatis dibuat oleh sistem PASHMOOD
                                     </div>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-rose-600 transition shadow-lg shadow-slate-200 uppercase tracking-widest text-xs">
+                            <button type="submit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-rose-600 transition shadow-lg shadow-slate-200 uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed" {{ $order->courier ? '' : 'disabled' }}>
                                 Generate Resi & Label
                             </button>
                         </form>
@@ -198,18 +195,18 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="p-6 rounded-3xl bg-emerald-50 border border-emerald-100">
                                 <p class="text-[10px] font-black text-emerald-600 uppercase mb-1">Kurir & Resi</p>
-                                <p class="font-extrabold text-slate-800">{{ $order->courier }} - <span class="text-indigo-600">{{ $order->resi_number }}</span></p>
+                                <p class="font-extrabold text-slate-800">{{ $order->courier }} - <span class="text-rose-600">{{ $order->resi_number }}</span></p>
                             </div>
                             <a href="{{ route('admin.order.print_resi', $order->id) }}" target="_blank" class="p-6 rounded-3xl bg-white border border-slate-200 hover:border-rose-500 transition flex items-center justify-center gap-3 font-bold text-slate-700">
-                                🖨️ Cetak Label Packing
+                                Cetak Label Packing
                             </a>
                         </div>
 
                         @if(!in_array($order->status, ['shipped', 'completed']))
                         <form action="{{ route('admin.order.ship', $order->id) }}" method="POST" class="mt-4">
                             @csrf
-                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition shadow-xl shadow-indigo-100">
-                                📩 Tandai Pesanan Telah Dikirim
+                            <button type="submit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-rose-600 transition shadow-xl shadow-slate-200">
+                                Tandai Pesanan Telah Dikirim
                             </button>
                         </form>
                         @endif
@@ -236,6 +233,10 @@
                     <div>
                         <p class="text-[10px] font-black text-slate-300 uppercase leading-none">No. WhatsApp</p>
                         <p class="font-bold text-slate-800">{{ $order->phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-300 uppercase leading-none">Jasa Pengiriman</p>
+                        <p class="font-bold text-slate-800">{{ $order->courier ?? 'Belum dipilih' }}</p>
                     </div>
                     <div>
                         <p class="text-[10px] font-black text-slate-300 uppercase leading-none">Alamat Lengkap</p>

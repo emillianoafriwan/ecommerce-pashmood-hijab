@@ -27,11 +27,17 @@
             </div>
             
             <div class="flex items-center gap-4 md:gap-8">
-                <a href="{{ route('cart.index') }}" class="relative group p-2">
+                <a href="{{ auth()->check() && auth()->user()->role === 'admin' ? route('products.index') : route('cart.index') }}" class="relative group p-2" title="{{ auth()->check() && auth()->user()->role === 'admin' ? 'Kelola Produk' : 'Keranjang' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700 group-hover:text-rose-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span class="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 rounded-full">3</span>
+                    @guest
+                        <span class="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 rounded-full">3</span>
+                    @else
+                        @if(auth()->user()->role !== 'admin')
+                            <span class="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-bold px-1.5 rounded-full">3</span>
+                        @endif
+                    @endguest
                 </a>
                 
                 @auth
@@ -173,7 +179,7 @@
     <!-- FOOTER INFO -->
     <footer class="bg-white border-t border-slate-100 py-12">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-slate-400 text-sm">© 2024 PASHMOOD Pashmina. Dibuat dengan penuh cinta untuk wanita muslimah.</p>
+            <p class="text-slate-400 text-sm">© 2026 PASHMOOD Pashmina. Dibuat dengan penuh cinta untuk wanita muslimah.</p>
         </div>
     </footer>
 

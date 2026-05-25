@@ -12,8 +12,23 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->get();
-        return view('admin.products.index', compact('products'));
+        $query = Product::with(['category', 'variations']);
+
+        if (request()->filled('search')) {
+            $query->where(function ($productQuery) {
+                $productQuery->where('name', 'like', '%' . request('search') . '%')
+                    ->orWhere('description', 'like', '%' . request('search') . '%');
+            });
+        }
+
+        if (request()->filled('category')) {
+            $query->where('category_id', request('category'));
+        }
+
+        $products = $query->latest()->get();
+        $categories = Category::all();
+
+        return view('admin.products.index', compact('products', 'categories'));
     }
 
     public function create()

@@ -11,6 +11,10 @@ class CartController extends Controller
 {
     public function index()
     {
+        if (Auth::user()?->role === 'admin') {
+            return redirect()->route('products.index')->with('info', 'Admin tidak perlu checkout. Silakan kelola produk dari halaman ini.');
+        }
+
         $cart = session()->get('cart', []);
         return view('cart.index', compact('cart'));
     }
@@ -20,6 +24,10 @@ class CartController extends Controller
         // 1. Cek Login
         if (!Auth::check()) {
             return redirect()->route('login')->with('info', 'Silakan login terlebih dahulu untuk pre-order!');
+        }
+
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('products.index')->with('info', 'Admin tidak perlu menambahkan produk ke keranjang. Silakan kelola produk dari halaman ini.');
         }
 
         // 2. Validasi input warna & jumlah pembelian

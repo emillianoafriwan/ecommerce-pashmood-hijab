@@ -23,6 +23,10 @@ class OrderController extends Controller
     // 2. Menampilkan form Pre-Order
     public function create()
     {
+        if (Auth::user()?->role === 'admin') {
+            return redirect()->route('products.index')->with('info', 'Admin tidak perlu checkout. Silakan kelola produk dari halaman ini.');
+        }
+
         if (!session()->has('cart') || empty(session('cart'))) {
             return redirect()->route('cart.index')->with('error', 'Keranjang kosong!');
         }
@@ -32,9 +36,14 @@ class OrderController extends Controller
     // 3. Proses Pre-Order (Simpan ke DB)
     public function store(Request $request)
     {
+        if (Auth::user()?->role === 'admin') {
+            return redirect()->route('products.index')->with('info', 'Admin tidak perlu checkout. Silakan kelola produk dari halaman ini.');
+        }
+
         $request->validate([
             'address' => 'required|string',
             'phone' => 'required|string',
+            'courier' => 'required|string|in:JNE Express,J&T Express,Sicepat,Anteraja',
         ]);
 
         $cart = session()->get('cart');
@@ -48,6 +57,7 @@ class OrderController extends Controller
                 'status' => 'pre_order',
                 'address' => $request->address,
                 'phone' => $request->phone,
+                'courier' => $request->courier,
             ]);
 
             foreach ($cart as $id => $details) {
@@ -224,20 +234,22 @@ class OrderController extends Controller
 
         return view('admin.orders.report', compact('orders', 'totalRevenue'));
     }
-// TAHAP 1: Buat Nomor Resi Otomatis
+    // TAHAP 1: Buat Nomor Resi Otomatis
     public function generateResi(Request $request, $id)
     {
-        $request->validate(['courier' => 'required|string|max:50']);
         $order = Order::findOrFail($id);
 
         if ($order->status !== 'paid') {
             return back()->with('error', 'Pre-order harus dibayar dan diverifikasi sebelum resi dibuat.');
         }
 
+        if (!$order->courier) {
+            return back()->with('error', 'Jasa kurir belum dipilih pembeli, resi belum bisa dibuat.');
+        }
+
         if (!$order->resi_number) {
             $resi_number = 'PO' . date('ymd') . str_pad($order->id, 4, '0', STR_PAD_LEFT) . mt_rand(100, 999);
             $order->update([
-                'courier' => $request->courier,
                 'resi_number' => $resi_number,
                 // PERHATIAN: Status sengaja TIDAK diubah jadi shipped di sini
             ]);

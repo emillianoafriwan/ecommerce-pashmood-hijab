@@ -22,7 +22,7 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <a href="{{ route('shop.index') }}" class="font-extrabold text-2xl tracking-tighter text-rose-800">PASHMOOD<span class="font-light text-slate-400 text-sm ml-1 tracking-widest uppercase">Pashmina</span></a>
             <div class="flex items-center gap-6">
-                <a href="{{ route('cart.index') }}" class="relative group p-2">
+                <a href="{{ auth()->check() && auth()->user()->role === 'admin' ? route('products.index') : route('cart.index') }}" class="relative group p-2" title="{{ auth()->check() && auth()->user()->role === 'admin' ? 'Kelola Produk' : 'Keranjang' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700 group-hover:text-rose-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
@@ -60,7 +60,7 @@
                         <p class="text-3xl font-black text-rose-600">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         <div class="flex text-yellow-400 text-sm">
                             ★ ★ ★ ★ <span class="text-slate-200">★</span>
-                            <span class="ml-2 text-slate-400 font-medium">(12 Ulasan)</span>
+                            <span class="ml-2 text-slate-400 font-medium">(Ulasan)</span>
                         </div>
                     </div>
                 </div>
@@ -75,43 +75,57 @@
                     $firstAvailableStock = optional($availableVariations->first())->stock ?? 1;
                 @endphp
 
-                <form action="{{ route('cart.add', $product->id) }}" method="POST">
-                    @csrf
-                    
-                    <!-- Pilih Warna -->
-                    <div class="mb-8">
-                        <label class="block text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Pilih Warna</label>
-                        <div class="flex flex-wrap gap-3">
-                            @forelse($product->variations as $variation)
-                                <label class="relative cursor-pointer group">
-                                    <input type="radio" name="variation_id" value="{{ $variation->id }}" data-stock="{{ $variation->stock }}" class="peer hidden" {{ $variation->stock <= 0 ? 'disabled' : '' }} {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
-                                    <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200 {{ $variation->stock <= 0 ? 'opacity-40 cursor-not-allowed bg-slate-50' : '' }}">
-                                        {{ $variation->color }}
-                                        <span class="block text-[9px] font-medium text-slate-400 mt-1 uppercase">
-                                            {{ $variation->stock > 0 ? 'Kuota: ' . $variation->stock : 'Habis' }}
-                                        </span>
-                                    </div>
-                                </label>
-                            @empty
-                                <p class="text-sm text-rose-500">Stok variasi sedang diproses.</p>
-                            @endforelse
+                @if(auth()->check() && auth()->user()->role === 'admin')
+                    <div class="bg-slate-50 border border-slate-100 rounded-[2rem] p-6">
+                        <p class="text-sm text-slate-500 font-medium mb-5">Akun admin tidak melakukan checkout dari katalog. Gunakan panel produk untuk mengubah detail, harga, gambar, dan stok variasi.</p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="{{ route('products.edit', $product->id) }}" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
+                                Edit Produk Ini
+                            </a>
+                            <a href="{{ route('products.index') }}" class="flex-1 bg-white text-slate-700 py-4 rounded-2xl font-bold hover:text-rose-600 transition border border-slate-200 flex justify-center items-center gap-3">
+                                Kelola Produk
+                            </a>
                         </div>
                     </div>
-
-                    <!-- Jumlah & CTA -->
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
-                            <button type="button" id="decreaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">-</button>
-                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $firstAvailableStock }}" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
-                            <button type="button" id="increaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">+</button>
-                        </div>
+                @else
+                    <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                        @csrf
                         
-                        <button type="submit" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                            Amankan Slot Pre-Order
-                        </button>
-                    </div>
-                </form>
+                        <!-- Pilih Warna -->
+                        <div class="mb-8">
+                            <label class="block text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Pilih Warna</label>
+                            <div class="flex flex-wrap gap-3">
+                                @forelse($product->variations as $variation)
+                                    <label class="relative cursor-pointer group">
+                                        <input type="radio" name="variation_id" value="{{ $variation->id }}" data-stock="{{ $variation->stock }}" class="peer hidden" {{ $variation->stock <= 0 ? 'disabled' : '' }} {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
+                                        <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200 {{ $variation->stock <= 0 ? 'opacity-40 cursor-not-allowed bg-slate-50' : '' }}">
+                                            {{ $variation->color }}
+                                            <span class="block text-[9px] font-medium text-slate-400 mt-1 uppercase">
+                                                {{ $variation->stock > 0 ? 'Kuota: ' . $variation->stock : 'Habis' }}
+                                            </span>
+                                        </div>
+                                    </label>
+                                @empty
+                                    <p class="text-sm text-rose-500">Stok variasi sedang diproses.</p>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        <!-- Jumlah & CTA -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
+                                <button type="button" id="decreaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">-</button>
+                                <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $firstAvailableStock }}" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
+                                <button type="button" id="increaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">+</button>
+                            </div>
+                            
+                            <button type="submit" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                Amankan Slot Pre-Order
+                            </button>
+                        </div>
+                    </form>
+                @endif
 
                 <div class="mt-8 flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-rose-50 pt-8">
                     <div class="flex items-center gap-2">✨ Premium Material</div>
@@ -169,7 +183,7 @@
             @auth
             <div id="review-form" class="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white">
                 <h3 class="text-2xl font-extrabold mb-2">Bagikan Pengalamanmu</h3>
-                <p class="text-slate-400 text-sm mb-8">Ulasanmu sangat berharga bagi AMORA Sisters lainnya.</p>
+                <p class="text-slate-400 text-sm mb-8">Ulasanmu sangat berharga bagi pelanggan PASHMOOD lainnya.</p>
                 
                 <form action="{{ route('review.store', $product->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -223,19 +237,21 @@
             return selected ? Number(selected.dataset.stock || 1) : 1;
         }
 
-        variationInputs.forEach((input) => input.addEventListener('change', () => {
-            const maxStock = selectedStock();
-            quantityInput.max = maxStock;
-            if(Number(quantityInput.value) > maxStock) quantityInput.value = maxStock;
-        }));
+        if (quantityInput) {
+            variationInputs.forEach((input) => input.addEventListener('change', () => {
+                const maxStock = selectedStock();
+                quantityInput.max = maxStock;
+                if(Number(quantityInput.value) > maxStock) quantityInput.value = maxStock;
+            }));
 
-        decreaseQty?.addEventListener('click', () => {
-            if(Number(quantityInput.value) > 1) quantityInput.value = Number(quantityInput.value) - 1;
-        });
+            decreaseQty?.addEventListener('click', () => {
+                if(Number(quantityInput.value) > 1) quantityInput.value = Number(quantityInput.value) - 1;
+            });
 
-        increaseQty?.addEventListener('click', () => {
-            if(Number(quantityInput.value) < selectedStock()) quantityInput.value = Number(quantityInput.value) + 1;
-        });
+            increaseQty?.addEventListener('click', () => {
+                if(Number(quantityInput.value) < selectedStock()) quantityInput.value = Number(quantityInput.value) + 1;
+            });
+        }
     </script>
 </body>
 </html>

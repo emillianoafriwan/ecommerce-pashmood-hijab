@@ -86,7 +86,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 Alamat Pengiriman
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                     <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Penerima & Kontak</p>
                     <p class="font-bold text-slate-800">{{ $order->user->name }}</p>
@@ -95,6 +95,10 @@
                 <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                     <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Alamat Lengkap</p>
                     <p class="text-sm font-medium text-slate-600 leading-relaxed">{{ $order->address }}</p>
+                </div>
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Jasa Pengiriman</p>
+                    <p class="font-bold text-slate-800">{{ $order->courier ?? 'Belum dipilih' }}</p>
                 </div>
             </div>
         </div>
@@ -222,6 +226,15 @@
         @endif
 
         @if($order->resi_number)
+            @php
+                $trackingUrl = match($order->courier) {
+                    'JNE Express' => 'https://www.jne.co.id/id/tracking/trace',
+                    'J&T Express' => 'https://jet.co.id/track',
+                    'Sicepat' => 'https://www.sicepat.com/checkAwb',
+                    'Anteraja' => 'https://anteraja.id/tracking',
+                    default => null,
+                };
+            @endphp
             <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
                 <div class="absolute -right-6 -top-6 text-slate-800 opacity-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-40 w-40" viewBox="0 0 20 20" fill="currentColor"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5h-3V7h-1z" /></svg>
@@ -241,6 +254,12 @@
                             <p class="font-black text-2xl tracking-wider text-rose-300">{{ $order->resi_number }}</p>
                         </div>
                     </div>
+
+                    @if($trackingUrl)
+                        <a href="{{ $trackingUrl }}" target="_blank" class="mt-6 inline-flex items-center justify-center rounded-2xl bg-white text-slate-900 px-6 py-3 text-xs font-black uppercase tracking-widest hover:bg-rose-100 transition">
+                            Lacak Paket
+                        </a>
+                    @endif
                 </div>
             </div>
         @endif
