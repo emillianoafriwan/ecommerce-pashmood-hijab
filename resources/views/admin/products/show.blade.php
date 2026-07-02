@@ -87,40 +87,47 @@
                         </div>
                     </div>
                 @else
-                    <form action="{{ route('cart.add', $product->id) }}" method="POST">
-                        @csrf
-                        
-                        <!-- Pilih Warna -->
-                        <div class="mb-8">
-                            <label class="block text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Pilih Warna</label>
-                            <div class="flex flex-wrap gap-3">
-                                @forelse($product->variations as $variation)
-                                    <label class="relative cursor-pointer group">
-                                        <input type="radio" name="variation_id" value="{{ $variation->id }}" class="peer hidden" {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
-                                        <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200">
-                                            {{ $variation->color }}
-                                        </div>
-                                    </label>
-                                @empty
-                                    <p class="text-sm text-rose-500">Variasi warna sedang diproses.</p>
-                                @endforelse
-                            </div>
+                    @if(!$product->is_active)
+                        <div class="bg-rose-50 border border-rose-200 p-6 rounded-[2rem] text-rose-700 font-bold flex items-center gap-3 shadow-sm">
+                            <span class="text-xl">⚠️</span>
+                            <span>Produk ini sedang dinonaktifkan dan tidak tersedia untuk dipesan.</span>
                         </div>
-
-                        <!-- Jumlah & CTA -->
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
-                                <button type="button" id="decreaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">-</button>
-                                <input type="number" name="quantity" id="quantity" value="1" min="1" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
-                                <button type="button" id="increaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">+</button>
-                            </div>
+                    @else
+                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                            @csrf
                             
-                            <button type="submit" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                                Amankan Slot Pre-Order
-                            </button>
-                        </div>
-                    </form>
+                            <!-- Pilih Warna -->
+                            <div class="mb-8">
+                                <label class="block text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Pilih Warna</label>
+                                <div class="flex flex-wrap gap-3">
+                                    @forelse($product->variations as $variation)
+                                        <label class="relative cursor-pointer group">
+                                            <input type="radio" name="variation_id" value="{{ $variation->id }}" class="peer hidden" {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
+                                            <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200">
+                                                {{ $variation->color }}
+                                            </div>
+                                        </label>
+                                    @empty
+                                        <p class="text-sm text-rose-500">Variasi warna sedang diproses.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+
+                            <!-- Jumlah & CTA -->
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="flex items-center bg-slate-100 rounded-2xl p-1 w-fit">
+                                    <button type="button" id="decreaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">-</button>
+                                    <input type="number" name="quantity" id="quantity" value="1" min="1" class="w-16 bg-transparent text-center font-bold text-slate-800 outline-none">
+                                    <button type="button" id="increaseQty" class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-slate-600 hover:bg-white transition">+</button>
+                                </div>
+                                
+                                <button type="submit" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-rose-600 transition shadow-xl shadow-rose-100 flex justify-center items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                    Amankan Slot Pre-Order
+                                </button>
+                            </div>
+                        </form>
+                    @endif
                 @endif
 
                 <div class="mt-8 flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-rose-50 pt-8">
