@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Produk - Admin PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -26,11 +27,14 @@
             </a>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('dashboard') }}" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:border-rose-300 hover:text-rose-600 transition">
-                    Dashboard
-                </a>
-                <a href="{{ route('products.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition shadow-lg shadow-rose-200">
-                    Tambah Produk
+                <a href="{{ route('dashboard') }}" class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-200 hover:border-rose-500 bg-white overflow-hidden transition" title="Dashboard">
+                    @if(auth()->user()->avatar)
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full bg-rose-100 flex items-center justify-center text-rose-700 font-bold text-sm">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    @endif
                 </a>
             </div>
         </div>
@@ -47,11 +51,17 @@
                        placeholder="Cari produk atau deskripsi..."
                        class="flex-1 px-6 py-4 rounded-2xl focus:outline-none text-slate-700 font-medium bg-white">
 
-                <select name="category" class="md:w-56 px-6 py-4 rounded-2xl md:rounded-none text-slate-500 font-medium cursor-pointer md:border-l border-slate-100 bg-white focus:outline-none">
+                <select name="category" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="md:w-56 px-6 py-4 rounded-2xl md:rounded-none text-slate-500 font-medium cursor-pointer md:border-l border-slate-100 bg-white focus:outline-none">
                     <option value="">Semua Kategori</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                     @endforeach
+                </select>
+
+                <select name="status" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()" class="md:w-48 px-6 py-4 rounded-2xl md:rounded-none text-slate-500 font-medium cursor-pointer md:border-l border-slate-100 bg-white focus:outline-none">
+                    <option value="">Semua Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
                 </select>
 
                 <button type="submit" class="bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold hover:bg-rose-600 transition duration-300">
@@ -118,7 +128,8 @@
                     <div class="flex gap-3 overflow-x-auto pb-2 hide-scroll">
                         <a href="{{ route('products.index') }}" class="bg-slate-900 text-white px-6 py-2 rounded-full text-sm font-bold whitespace-nowrap">Semua</a>
                         <a href="{{ route('categories.index') }}" class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Kategori</a>
-                        <a href="{{ route('shop.index') }}" target="_blank" class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Lihat Toko</a>
+                        <a href="{{ route('shop.index') }}" class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Lihat Toko</a>
+                        <a href="{{ route('shop.index', ['edit_banners' => 'true']) }}" class="bg-white text-slate-500 border border-slate-200 px-6 py-2 rounded-full text-sm font-bold hover:border-rose-300 whitespace-nowrap transition">Tambah Banner</a>
                     </div>
                 </div>
 
@@ -132,14 +143,19 @@
                                     <span class="bg-slate-900/90 text-white backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">
                                         {{ $product->variations->count() }} Variasi
                                     </span>
+                                    @if($product->is_active)
+                                        <span class="bg-emerald-500/90 text-white backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">Aktif</span>
+                                    @else
+                                        <span class="bg-rose-500/90 text-white backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">Nonaktif</span>
+                                    @endif
                                 </div>
 
                                 <div class="absolute inset-x-4 bottom-4 flex gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition duration-300">
                                     <a href="{{ route('products.edit', $product->id) }}" class="flex-1 bg-white text-slate-900 px-4 py-3 rounded-2xl font-bold text-sm text-center shadow-xl hover:text-rose-600 transition">Edit</a>
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="shrink-0">
+                                    <form id="delete-form-{{ $product->id }}" action="{{ route('products.destroy', $product->id) }}" method="POST" class="shrink-0">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" onclick="return confirm('Yakin ingin hapus produk?')" class="w-12 h-12 bg-white text-rose-500 rounded-2xl font-black shadow-xl hover:bg-rose-600 hover:text-white transition" title="Hapus Produk">
+                                        <button type="button" onclick="confirmDelete({{ $product->id }})" class="w-12 h-12 bg-white text-rose-500 rounded-2xl font-black shadow-xl hover:bg-rose-600 hover:text-white transition" title="Hapus Produk">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
@@ -155,7 +171,7 @@
                                         <h3 class="font-bold text-slate-800 line-clamp-1 group-hover:text-rose-600 transition">{{ $product->name }}</h3>
                                         <p class="text-slate-900 font-extrabold">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                                     </div>
-                                    <a href="{{ route('product.show', $product->id) }}" target="_blank" class="shrink-0 w-10 h-10 rounded-2xl bg-white border border-slate-100 text-rose-600 flex items-center justify-center shadow-sm hover:bg-rose-600 hover:text-white transition" title="Preview">
+                                    <a href="{{ route('product.show', $product->id) }}" class="shrink-0 w-10 h-10 rounded-2xl bg-white border border-slate-100 text-rose-600 flex items-center justify-center shadow-sm hover:bg-rose-600 hover:text-white transition" title="Preview">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -188,6 +204,83 @@
             </div>
         @endif
     </main>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-delete-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <!-- Modal Container -->
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl border border-rose-100/50 transform scale-95 opacity-0 transition-all duration-300">
+            <!-- Icon / Emoji -->
+            <div class="w-16 h-16 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner animate-bounce">
+                ⚠️
+            </div>
+            
+            <!-- Header -->
+            <h3 class="text-xl font-extrabold text-slate-800 text-center mb-2">Hapus Produk?</h3>
+            <p class="text-sm text-slate-500 text-center mb-8 leading-relaxed">Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.</p>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-6 py-4 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition text-sm uppercase tracking-wider text-center cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="confirm-delete-btn" class="flex-1 px-6 py-4 rounded-2xl text-white bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 font-bold transition text-sm uppercase tracking-wider text-center cursor-pointer">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeDeleteFormId = null;
+
+        function confirmDelete(productId) {
+            activeDeleteFormId = 'delete-form-' + productId;
+            const modal = document.getElementById('confirm-delete-modal');
+            const modalContainer = modal.querySelector('div');
+            
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Force reflow
+            modal.classList.remove('opacity-0');
+            modalContainer.classList.remove('scale-95', 'opacity-0');
+            modalContainer.classList.add('scale-100', 'opacity-100');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('confirm-delete-modal');
+            const modalContainer = modal.querySelector('div');
+            
+            modal.classList.add('opacity-0');
+            modalContainer.classList.remove('scale-100', 'opacity-100');
+            modalContainer.classList.add('scale-95', 'opacity-0');
+            document.body.classList.remove('overflow-hidden');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+            if (activeDeleteFormId) {
+                const form = document.getElementById(activeDeleteFormId);
+                if (form) {
+                    closeDeleteModal();
+                    // Dispatch the submit event to trigger smooth navigation
+                    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                    form.dispatchEvent(submitEvent);
+                    if (!submitEvent.defaultPrevented) {
+                        form.submit();
+                    }
+                }
+            }
+        });
+
+        // Close on clicking backdrop
+        document.getElementById('confirm-delete-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeDeleteModal();
+        });
+    </script>
+
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

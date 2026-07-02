@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - PASHMOOD Pashmina</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -51,13 +52,13 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" autocomplete="off">
                 @csrf
 
                 <!-- Input Email -->
                 <div class="mb-5">
                     <label for="email" class="block text-xs font-black text-slate-700 mb-2 uppercase tracking-widest">Alamat Email</label>
-                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" 
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="off" 
                            class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-medium bg-slate-50 focus:bg-white placeholder-slate-300"
                            placeholder="">
                     @error('email')
@@ -73,7 +74,7 @@
                             <a href="{{ route('password.request') }}" class="text-xs font-bold text-rose-600 hover:text-rose-700 transition">Lupa Password?</a>
                         @endif
                     </div>
-                    <input id="password" type="password" name="password" required autocomplete="current-password" 
+                    <input id="password" type="password" name="password" required autocomplete="new-password" 
                            class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold bg-slate-50 focus:bg-white placeholder-slate-300"
                            placeholder="••••••••">
                     @error('password')
@@ -110,5 +111,6 @@
 
     </div>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

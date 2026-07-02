@@ -25,6 +25,14 @@ class ProductController extends Controller
             $query->where('category_id', request('category'));
         }
 
+        if (request()->filled('status')) {
+            if (request('status') === 'active') {
+                $query->where('is_active', true);
+            } elseif (request('status') === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
+
         $products = $query->latest()->get();
         $categories = Category::all();
 
@@ -43,9 +51,11 @@ class ProductController extends Controller
             'name' => 'required',
             'category_id' => 'required',
             'price' => 'required|numeric',
+            'description' => 'nullable|string',
             'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'variations' => 'required|array',
             'variations.*.color' => 'required',
+            'variations.*.image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $imagePath = $request->file('image')->store('products', 'public');
@@ -54,13 +64,21 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'name'        => $request->name,
             'slug'        => $request->slug,
+            'description' => $request->description,
             'price'       => $request->price,
             'image_path'  => $imagePath,
+            'is_active'   => $request->has('is_active') ? (bool) $request->is_active : true,
         ]);
 
-        foreach ($request->variations as $var) {
+        foreach ($request->variations as $index => $var) {
+            $varImagePath = null;
+            if ($request->hasFile("variations.{$index}.image")) {
+                $varImagePath = $request->file("variations.{$index}.image")->store('variations', 'public');
+            }
+
             $product->variations()->create([
                 'color' => $var['color'],
+                'image_path' => $varImagePath,
             ]);
         }
 
@@ -76,15 +94,28 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $validated = $request->validate([
             'category_id' => 'required',
             'name' => 'required',
             'slug' => 'required|unique:products,slug,' . $product->id,
             'price' => 'required|numeric',
+            'description' => 'nullable|string',
             'image' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'variations' => 'required|array',
-            'variations.*.color' => 'required',
+            'variations' => 'nullable|array',
+            'variations.*.id' => 'nullable|exists:product_variations,id',
+            'variations.*.color' => 'nullable|string',
+            'variations.*.image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        // Filter variasi yang warnanya kosong (baris yang dikosongkan user)
+        // Tetap pertahankan key index asli agar bisa memetakan upload file variations.*.image dengan benar
+        $validVariations = collect($validated['variations'] ?? [])
+            ->filter(fn($var) => !empty(trim($var['color'] ?? '')))
+            ->toArray();
+
+        if (empty($validVariations)) {
+            return back()->withErrors(['variations' => 'Produk harus memiliki minimal 1 variasi warna.'])->withInput();
+        }
 
         if ($request->hasFile('image')) {
             if ($product->image_path) {
@@ -95,23 +126,49 @@ class ProductController extends Controller
 
         // Update variasi warna PO.
         $keepIds = [];
-        foreach ($request->variations as $var) {
+        foreach ($validVariations as $index => $var) {
+            $variationId = $var['id'] ?? null;
+            $existingVar = null;
+            if ($variationId) {
+                $existingVar = $product->variations()->find($variationId);
+            }
+
+            $varImagePath = $existingVar ? $existingVar->image_path : null;
+            if ($request->hasFile("variations.{$index}.image")) {
+                if ($existingVar && $existingVar->image_path) {
+                    Storage::delete('public/' . $existingVar->image_path);
+                }
+                $varImagePath = $request->file("variations.{$index}.image")->store('variations', 'public');
+            }
+
             $updatedVar = $product->variations()->updateOrCreate(
-                ['id' => $var['id'] ?? null],
+                ['id' => $variationId],
                 [
                     'color' => $var['color'],
+                    'image_path' => $varImagePath,
                 ]
             );
             $keepIds[] = $updatedVar->id;
         }
 
-        $product->variations()->whereNotIn('id', $keepIds)->delete();
+        // Delete removed variations and their images
+        $removedVariations = $product->variations()->whereNotIn('id', $keepIds)->get();
+        foreach ($removedVariations as $removedVar) {
+            // Only delete the image if this variation has never been ordered
+            $hasBeenOrdered = \App\Models\OrderItem::where('variation_id', $removedVar->id)->exists();
+            if ($removedVar->image_path && !$hasBeenOrdered) {
+                Storage::delete('public/' . $removedVar->image_path);
+            }
+            $removedVar->delete();
+        }
 
         $product->update([
-            'category_id' => $request->category_id,
-            'name'        => $request->name,
-            'slug'        => $request->slug,
-            'price'       => $request->price,
+            'category_id'  => $validated['category_id'],
+            'name'         => $validated['name'],
+            'slug'         => $validated['slug'],
+            'description'  => $validated['description'],
+            'price'        => $validated['price'],
+            'is_active'    => $request->has('is_active') ? (bool) $request->is_active : false,
         ]);
 
         return redirect()->route('products.index')->with('success', 'Produk dan variasi berhasil diperbarui!');
@@ -122,6 +179,12 @@ class ProductController extends Controller
         if ($product->orderItems()->exists()) {
             return redirect()->route('products.index')
                 ->with('error', 'Produk tidak bisa dihapus karena sudah pernah masuk transaksi.');
+        }
+
+        foreach ($product->variations as $var) {
+            if ($var->image_path) {
+                Storage::delete('public/' . $var->image_path);
+            }
         }
 
         if ($product->image_path) {

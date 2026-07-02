@@ -9,17 +9,27 @@ class Order extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'admin_read' => 'boolean',
+    ];
+
     protected $fillable = [
         'user_id', 
         'total_price', 
         'status', 
         'address', 
+        'province',
+        'city',
+        'district',
+        'village',
+        'detail_address',
         'phone', 
         'payment_proof',
         'courier',
         'resi_number',
         'rejection_reason',
         'cancellation_reason',
+        'admin_read',
     ];
 
     public function user()

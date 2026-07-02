@@ -15,6 +15,27 @@ class ReviewController extends Controller
             'media' => 'nullable|file|mimes:jpeg,png,jpg,mp4,mov,avi|max:20480', // Maksimal 20MB
         ]);
 
+        // Cek apakah pembeli memiliki transaksi pesanan selesai (completed) untuk produk ini
+        $hasBought = \App\Models\Order::where('user_id', auth()->id())
+            ->where('status', 'completed')
+            ->whereHas('orderItems', function ($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->exists();
+
+        if (!$hasBought) {
+            return back()->with('error', 'Anda hanya dapat memberikan ulasan untuk produk yang telah Anda beli dan pesanan telah selesai.');
+        }
+
+        // Cek apakah pembeli sudah pernah memberikan ulasan untuk produk ini sebelumnya
+        $alreadyReviewed = Review::where('user_id', auth()->id())
+            ->where('product_id', $productId)
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return back()->with('error', 'Anda sudah memberikan ulasan untuk produk ini.');
+        }
+
         $mediaPath = null;
         $mediaType = null;
 

@@ -37,40 +37,45 @@ class CartController extends Controller
         ]);
 
         $product = Product::findOrFail($id);
+        if (!$product->is_active) {
+            return redirect()->route('shop.index')->with('error', 'Produk ini sudah tidak aktif/dijual.');
+        }
         $variation = ProductVariation::findOrFail($request->variation_id);
         
         $quantity = $request->input('quantity', 1);
 
-        $cart = session()->get('cart', []);
+        // Simpan ke database
+        $cartItem = \App\Models\CartItem::where('user_id', Auth::id())
+            ->where('product_id', $product->id)
+            ->where('product_variation_id', $variation->id)
+            ->first();
 
-        // 3. Kunci Unik (ID Produk + ID Variasi) agar beda warna tidak bertumpuk
-        $cartKey = $id . '_' . $variation->id;
-
-        if(isset($cart[$cartKey])) {
-            $newQuantity = $cart[$cartKey]['quantity'] + $quantity;
-            $cart[$cartKey]['quantity'] = $newQuantity;
+        if ($cartItem) {
+            $cartItem->quantity += $quantity;
+            $cartItem->save();
         } else {
-            $cart[$cartKey] = [
-                "name"         => $product->name,
-                "color"        => $variation->color,
-                "variation_id" => $variation->id,
-                "quantity"     => $quantity,
-                "price"        => $product->price,
-                "image"        => $product->imageUrl()
-            ];
+            \App\Models\CartItem::create([
+                'user_id'              => Auth::id(),
+                'product_id'          => $product->id,
+                'product_variation_id' => $variation->id,
+                'quantity'             => $quantity,
+            ]);
         }
 
-        session()->put('cart', $cart);
         return redirect()->route('cart.index')->with('success', 'Sip! ' . $quantity . ' ' . $product->name . ' (' . $variation->color . ') berhasil masuk keranjang pre-order!');
     }
 
     public function remove($cartKey) // Terima $cartKey, bukan $id
     {
-        $cart = session()->get('cart', []);
+        $parts = explode('_', $cartKey);
+        if (count($parts) === 2) {
+            $productId = $parts[0];
+            $variationId = $parts[1];
 
-        if(isset($cart[$cartKey])) {
-            unset($cart[$cartKey]); 
-            session()->put('cart', $cart);
+            \App\Models\CartItem::where('user_id', Auth::id())
+                ->where('product_id', $productId)
+                ->where('product_variation_id', $variationId)
+                ->delete();
         }
 
         return redirect()->route('cart.index')->with('success', 'Produk berhasil dihapus dari keranjang!');

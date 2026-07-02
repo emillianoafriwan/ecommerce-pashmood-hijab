@@ -28,11 +28,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // --- Logika Redirect Pintar Bos ---
-        
-        // 1. Jika yang login adalah Admin, arahkan ke Dashboard
+        // --- Logika Redirect ---
+
+        // 1. Jika yang login adalah Admin, arahkan ke Dashboard Admin
         if ($request->user()->role === 'admin') {
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->route('admin.dashboard');
         }
 
         // 2. Jika yang login adalah Pembeli biasa, arahkan ke Halaman Utama (Toko)

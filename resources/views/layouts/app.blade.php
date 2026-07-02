@@ -13,6 +13,7 @@
 
         <!-- Scripts -->
 <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     </head>
     <body class="font-sans antialiased">
@@ -34,5 +35,6 @@
             </main>
         </div>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

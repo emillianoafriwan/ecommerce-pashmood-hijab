@@ -83,3 +83,74 @@ test('correct password must be provided to delete account', function () {
 
     $this->assertNotNull($user->fresh());
 });
+
+test('profile address validation fails when some address fields are filled but detail address is empty', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profile')
+        ->patch('/profile', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'province' => 'DKI Jakarta',
+            'province_code' => '31',
+            'city' => 'Jakarta Selatan',
+            'city_code' => '3174',
+            'district' => 'Kebayoran Baru',
+            'district_code' => '317401',
+            'village' => 'Selong',
+            'village_code' => '3174011001',
+            'detail_address' => '', // empty!
+        ]);
+
+    $response->assertSessionHasErrors(['detail_address']);
+});
+
+test('profile address validation passes when all address fields are filled', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profile')
+        ->patch('/profile', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'province' => 'DKI Jakarta',
+            'province_code' => '31',
+            'city' => 'Jakarta Selatan',
+            'city_code' => '3174',
+            'district' => 'Kebayoran Baru',
+            'district_code' => '317401',
+            'village' => 'Selong',
+            'village_code' => '3174011001',
+            'detail_address' => 'Jl. Jend. Sudirman Kav. 21',
+        ]);
+
+    $response->assertSessionHasNoErrors();
+    $user->refresh();
+    $this->assertSame('DKI Jakarta', $user->province);
+    $this->assertSame('Jl. Jend. Sudirman Kav. 21', $user->detail_address);
+});
+
+test('user isProfileComplete correctly identifies incomplete and complete profile status', function () {
+    $user = User::factory()->create();
+    
+    // Brand new user should not have complete profile
+    $this->assertFalse($user->isProfileComplete());
+
+    // Fill only phone number
+    $user->phone = '081234567890';
+    $this->assertFalse($user->isProfileComplete());
+
+    // Fill all address components
+    $user->province = 'DKI Jakarta';
+    $user->city = 'Jakarta Selatan';
+    $user->district = 'Kebayoran Baru';
+    $user->village = 'Selong';
+    $user->detail_address = 'Jl. Jend. Sudirman Kav. 21';
+    
+    // Now it should be complete
+    $this->assertTrue($user->isProfileComplete());
+});
+

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Kategori - Admin PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -42,7 +43,7 @@
             <p class="text-slate-500 mt-2 font-medium text-sm">Kelompokkan varian pashmina Anda agar lebih rapi dan mudah dicari oleh pembeli.</p>
         </div>
 
-        <form action="{{ route('categories.store') }}" method="POST">
+        <form action="{{ route('categories.store') }}" method="POST" id="categoryForm">
             @csrf 
             
             <!-- Input Nama Kategori -->
@@ -50,7 +51,8 @@
                 <label for="name" class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Nama Kategori</label>
                 <input type="text" name="name" id="name" required autofocus
                     class="w-full px-5 py-4 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-rose-500 transition outline-none text-slate-800 font-bold bg-slate-50 focus:bg-white placeholder-slate-300" 
-                    placeholder="Contoh: Pashmina Plisket, Inner Hijab...">
+                    placeholder="Contoh: Pashmina Plisket, Inner Hijab..."
+                    oninput="generateSlug()">
                 @error('name') 
                     <p class="text-rose-500 text-xs mt-2 font-bold flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -93,19 +95,38 @@
 
     <!-- Script Pembuat Slug Otomatis -->
     <script>
-        const nameInput = document.getElementById('name');
-        const slugInput = document.getElementById('slug');
-
-        nameInput.addEventListener('keyup', function() {
-            let preslug = nameInput.value;
-            let slug = preslug.toLowerCase()
+        function generateSlug() {
+            const nameStr = document.getElementById('name').value;
+            const slugStr = nameStr.toLowerCase()
                 .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter selain huruf, angka, spasi, dan strip
                 .replace(/[\s-]+/g, '-')      // Ubah spasi menjadi strip
                 .replace(/^-+|-+$/g, '');     // Hapus strip di awal dan akhir kata
             
-            slugInput.value = slug;
+            document.getElementById('slug').value = slugStr;
+        }
+
+        // Tangkap semua cara input: ketik, paste, autofill
+        const nameInput = document.getElementById('name');
+        ['input', 'paste', 'change'].forEach(function(event) {
+            nameInput.addEventListener(event, function() {
+                setTimeout(generateSlug, 0); // setTimeout agar value sudah terupdate saat paste
+            });
+        });
+
+        // Generate slug saat form di-submit jika slug masih kosong
+        document.getElementById('categoryForm').addEventListener('submit', function(e) {
+            const slugInput = document.getElementById('slug');
+            if (!slugInput.value.trim()) {
+                generateSlug();
+                // Jika nama pun kosong sehingga slug tetap kosong, batalkan submit
+                if (!slugInput.value.trim()) {
+                    e.preventDefault();
+                    nameInput.focus();
+                }
+            }
         });
     </script>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

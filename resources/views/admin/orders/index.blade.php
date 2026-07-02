@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Pre-Order - Admin PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -20,10 +21,17 @@
                 <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Admin Panel</p>
                 <h1 class="text-2xl font-extrabold tracking-tighter">PASHMOOD</h1>
             </div>
-            <a href="/dashboard" class="bg-slate-800 hover:bg-slate-700 text-sm font-bold px-5 py-2.5 rounded-xl transition border border-slate-700 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                <span class="hidden sm:inline">Kembali ke Dashboard</span>
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="/dashboard" class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 hover:border-rose-500 bg-slate-800 overflow-hidden transition" title="Dashboard">
+                    @if(auth()->user()->avatar)
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full bg-rose-100 flex items-center justify-center text-rose-700 font-bold text-sm">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    @endif
+                </a>
+            </div>
         </div>
     </header>
 
@@ -52,6 +60,7 @@
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400 tracking-widest">
                             <th class="px-8 py-5">ID Pesanan</th>
+                            <th class="px-8 py-5">Produk</th>
                             <th class="px-8 py-5">Nama Pembeli</th>
                             <th class="px-8 py-5">Total Bayar</th>
                             <th class="px-8 py-5">Status</th>
@@ -63,6 +72,18 @@
                         <tr class="hover:bg-slate-50/50 transition-colors duration-300 group">
                             <td class="px-8 py-6">
                                 <span class="text-sm font-bold text-slate-500 group-hover:text-slate-800 transition">#{{ $order->id }}</span>
+                            </td>
+                            <td class="px-8 py-6">
+                                @php $product = $order->orderItems->first()?->product; @endphp
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100">
+                                        <img src="{{ $product?->imageUrl() ?? asset('images/default.jpg') }}" alt="{{ $product?->name ?? 'Produk' }}" class="w-full h-full object-cover">
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">{{ \Illuminate\Support\Str::limit($product?->name ?? 'Produk PASHMOOD', 30) }}</p>
+                                        <p class="text-[10px] uppercase tracking-widest text-slate-400">{{ $order->orderItems->count() }} item</p>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-8 py-6">
                                 <div class="flex items-center gap-3">
@@ -94,7 +115,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-8 py-20 text-center">
+                            <td colspan="6" class="px-8 py-20 text-center">
                                 <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                                     <svg class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -113,5 +134,6 @@
     </main>
 
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

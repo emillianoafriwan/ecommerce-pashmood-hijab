@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Detail Order #{{ $order->id }} | PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -62,7 +63,8 @@
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 text-sm">{{ $item->product->name }}</p>
-                                            <p class="text-xs text-slate-400">Variasi: Premium Silk</p>
+                                            <p class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">{{ $item->product->category->name ?? 'Pashmina' }}</p>
+                                            <p class="text-xs text-slate-400 mt-1">Variasi: {{ $item->variation->color ?? 'Standar' }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -146,14 +148,45 @@
                     </div>
                 @elseif($order->status == 'canceled')
                     <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6">
-                        <p class="font-extrabold text-slate-800 mb-2">Pesanan dibatalkan pembeli</p>
+                        <p class="font-extrabold text-slate-800 mb-2">
+                            @if(str_starts_with($order->cancellation_reason ?? '', '[Admin]'))
+                                Pesanan dibatalkan oleh Admin
+                            @else
+                                Pesanan dibatalkan pembeli
+                            @endif
+                        </p>
                         <p class="text-sm text-slate-600 leading-relaxed mb-4">Pesanan ini tidak akan masuk proses pembayaran dan pengiriman.</p>
                         @if($order->cancellation_reason)
                             <div class="bg-white border border-slate-200 rounded-2xl p-4">
                                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Alasan Pembatalan</p>
-                                <p class="text-sm font-semibold text-slate-700 leading-relaxed">{{ $order->cancellation_reason }}</p>
+                                <p class="text-sm font-semibold text-slate-700 leading-relaxed">
+                                    @if(str_starts_with($order->cancellation_reason, '[Admin] '))
+                                        {{ substr($order->cancellation_reason, 8) }}
+                                    @else
+                                        {{ $order->cancellation_reason }}
+                                    @endif
+                                </p>
                             </div>
                         @endif
+                    </div>
+                @endif
+
+                @if(!in_array($order->status, ['completed', 'canceled']))
+                    <div class="mt-6 border-t border-slate-100 pt-6">
+                        <button type="button" onclick="document.getElementById('admin-cancel-form-container').classList.toggle('hidden')" class="w-full bg-white text-rose-600 border border-rose-200 font-bold py-3.5 rounded-2xl hover:bg-rose-50 transition text-sm uppercase tracking-wider">
+                            Batalkan Pesanan (Admin)
+                        </button>
+                        
+                        <div id="admin-cancel-form-container" class="hidden mt-4 p-5 bg-rose-50 rounded-2xl border border-rose-100">
+                            <form action="{{ route('admin.order.cancel', $order->id) }}" method="POST">
+                                @csrf
+                                <label class="block text-xs font-black uppercase tracking-widest text-rose-500 mb-2">Alasan Pembatalan oleh Admin</label>
+                                <textarea name="cancellation_reason" class="w-full bg-white border-none rounded-xl p-4 text-sm mb-3 ring-1 ring-rose-100 focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Tuliskan alasan pembatalan pesanan..." required></textarea>
+                                <button type="submit" class="w-full bg-rose-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest">
+                                    Konfirmasi Batalkan Pesanan
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -221,7 +254,44 @@
 
         <!-- KOLOM KANAN: Detail Pelanggan & Pembayaran -->
         <div class="space-y-8">
-            
+
+            <!-- Ringkasan Order -->
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+                <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Ringkasan Order</h3>
+                <div class="grid grid-cols-1 gap-4 text-sm text-slate-600">
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Tanggal Order</span>
+                        <span>{{ $order->created_at->format('d M Y H:i') }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Jumlah Produk</span>
+                        <span>{{ $order->orderItems->sum('quantity') }} item</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Total Harga</span>
+                        <span class="font-black text-slate-800">Rp {{ number_format($order->total_price, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Email Pembeli</span>
+                        <span>{{ $order->user->email }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Status</span>
+                        <span>{{ $order->statusIndo() }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Metode Kirim</span>
+                        <span>{{ $order->courier ?? 'Belum dipilih' }}</span>
+                    </div>
+                    @if($order->resi_number)
+                    <div class="flex justify-between gap-4">
+                        <span class="font-black uppercase tracking-widest text-slate-400">Nomor Resi</span>
+                        <span class="font-black text-slate-800">{{ $order->resi_number }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Detail Pelanggan -->
             <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
                 <h3 class="font-extrabold text-slate-800 text-sm uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">Info Pengiriman</h3>
@@ -289,5 +359,6 @@
         </div>
     </main>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

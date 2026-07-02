@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan Profil - PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -37,7 +38,7 @@
         </div>
 
         <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100">
-            @include('profile.partials.update-profile-information-form')
+            @include('profile.partials.update-profile-information-form', ['bankAccounts' => $bankAccounts])
         </div>
 
         <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100">
@@ -51,5 +52,6 @@
     </main>
 
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>

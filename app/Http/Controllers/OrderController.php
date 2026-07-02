@@ -16,21 +16,30 @@ class OrderController extends Controller
     // 1. Menampilkan daftar pesanan untuk Admin
     public function index()
     {
-        $orders = Order::with('user')->latest()->get();
+        $orders = Order::with(['user', 'orderItems.product'])->latest()->get();
         return view('admin.orders.index', compact('orders'));
     }
 
-    // 2. Menampilkan form Pre-Order
-    public function create()
+    // Menandai satu pesanan sebagai dibaca dan redirect ke detail admin
+    public function readAndRedirect($id)
     {
-        if (Auth::user()?->role === 'admin') {
-            return redirect()->route('products.index')->with('info', 'Admin tidak perlu checkout. Silakan kelola produk dari halaman ini.');
-        }
+        $order = Order::findOrFail($id);
+        $order->update(['admin_read' => true]);
 
-        if (!session()->has('cart') || empty(session('cart'))) {
-            return redirect()->route('cart.index')->with('error', 'Keranjang kosong!');
-        }
-        return view('orders.checkout');
+        return redirect()->route('admin.order.detail', $id);
+    }
+
+    // Menandai semua pesanan sebagai dibaca
+    public function markAllRead()
+    {
+        Order::where('admin_read', false)->update(['admin_read' => true]);
+        return redirect()->back()->with('success', 'Semua notifikasi telah dibaca.');
+    }
+
+    // 2. Menampilkan form Pre-Order
+    public function create(Request $request)
+    {
+        return redirect()->route('cart.index');
     }
 
     // 3. Proses Pre-Order (Simpan ke DB)
@@ -41,23 +50,45 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'address' => 'required|string',
-            'phone' => 'required|string',
-            'courier' => 'required|string|in:JNE Express,J&T Express,Sicepat,Anteraja',
+            'province'       => 'required|string|max:100',
+            'city'           => 'required|string|max:100',
+            'district'       => 'required|string|max:100',
+            'village'        => 'required|string|max:100',
+            'detail_address' => 'required|string',
+            'phone'          => 'required|string',
+            'courier'        => 'required|string|in:JNE Express,J&T Express,Sicepat,Anteraja',
         ]);
 
-        $cart = session()->get('cart');
+        // Gabungkan menjadi satu string alamat lengkap untuk backward-compat
+        $fullAddress = $request->detail_address . ', ' . $request->village . ', ' . $request->district . ', ' . $request->city . ', ' . $request->province;
+
+        $cart = session()->get('cart', []);
+        $selectedItems = $request->input('items', []);
+
+        $cart = array_filter($cart, function($key) use ($selectedItems) {
+            return in_array($key, $selectedItems);
+        }, ARRAY_FILTER_USE_KEY);
+
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang kosong atau produk belum dipilih!');
+        }
+
         $total = array_reduce($cart, fn($sum, $item) => $sum + ($item['price'] * $item['quantity']), 0);
 
         $order = null;
-        DB::transaction(function () use ($cart, $request, $total, &$order) {
+        DB::transaction(function () use ($cart, $request, $total, $fullAddress, &$order) {
             $order = Order::create([
-                'user_id' => Auth::id(),
-                'total_price' => $total,
-                'status' => 'pre_order',
-                'address' => $request->address,
-                'phone' => $request->phone,
-                'courier' => $request->courier,
+                'user_id'        => Auth::id(),
+                'total_price'    => $total,
+                'status'         => 'pre_order',
+                'address'        => $fullAddress,
+                'province'       => $request->province,
+                'city'           => $request->city,
+                'district'       => $request->district,
+                'village'        => $request->village,
+                'detail_address' => $request->detail_address,
+                'phone'          => $request->phone,
+                'courier'        => $request->courier,
             ]);
 
             foreach ($cart as $id => $details) {
@@ -76,21 +107,49 @@ class OrderController extends Controller
             }
         });
 
-        session()->forget('cart');
+        // Hapus item terpilih dari database
+        foreach ($cart as $id => $details) {
+            $parts = explode('_', $id);
+            $productId = $parts[0];
+            $variationId = $parts[1];
+
+            \App\Models\CartItem::where('user_id', Auth::id())
+                ->where('product_id', $productId)
+                ->where('product_variation_id', $variationId)
+                ->delete();
+        }
+
+        // Hapus item terpilih dari session
+        $fullCart = session()->get('cart', []);
+        foreach (array_keys($cart) as $key) {
+            unset($fullCart[$key]);
+        }
+        session()->put('cart', $fullCart);
+
         return redirect()->route('order.detail', $order->id)->with('success', 'Pre-order berhasil dibuat!');
     }
 
     // 4. Menampilkan detail pesanan (Sisi User)
     public function show($id)
     {
-        $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $order = Order::with(['user', 'orderItems.product.category', 'orderItems.variation'])
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
         return view('orders.show', compact('order'));
     }
 
     // 5. Menampilkan detail pesanan (Sisi Admin)
     public function showAdmin($id)
     {
-        $order = Order::with(['user', 'orderItems.product'])->findOrFail($id);
+        $order = Order::with(['user', 'orderItems.product.category', 'orderItems.variation'])
+            ->findOrFail($id);
+
+        if (!$order->admin_read) {
+            $order->update(['admin_read' => true]);
+        }
+
         return view('admin.orders.show', compact('order'));
     }
 
@@ -98,7 +157,12 @@ class OrderController extends Controller
     public function confirm(Request $request, $id)
     {
         $request->validate([
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:20480',
+        ], [
+            'payment_proof.required' => 'Bukti pembayaran wajib diunggah.',
+            'payment_proof.image' => 'File harus berupa gambar.',
+            'payment_proof.mimes' => 'Format gambar harus jpeg, png, atau jpg.',
+            'payment_proof.max' => 'Ukuran gambar maksimal adalah 20 MB.',
         ]);
 
         $order = Order::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
@@ -112,7 +176,8 @@ class OrderController extends Controller
         $order->update([
             'status' => 'waiting', 
             'payment_proof' => $path,
-            'rejection_reason' => null // Hapus alasan penolakan jika sebelumnya pernah ditolak
+            'rejection_reason' => null, // Hapus alasan penolakan jika sebelumnya pernah ditolak
+            'admin_read' => false,
         ]);
 
         return redirect()->route('order.detail', $id)->with('success', 'Bukti dikirim, menunggu verifikasi Admin!');
@@ -146,6 +211,7 @@ class OrderController extends Controller
                 'status' => 'canceled',
                 'payment_proof' => null,
                 'cancellation_reason' => $request->cancellation_reason,
+                'admin_read' => false,
             ]);
         });
 
@@ -158,7 +224,8 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
         $order->update([
             'status' => 'paid',
-            'rejection_reason' => null // Pastikan bersih
+            'rejection_reason' => null, // Pastikan bersih
+            'admin_read' => true,
         ]);
 
         return redirect()->back()->with('success', 'Pembayaran berhasil dikonfirmasi!');
@@ -181,7 +248,8 @@ class OrderController extends Controller
         $order->update([
             'status' => 'pre_order', 
             'payment_proof' => null, // Kosongkan foto
-            'rejection_reason' => $request->reason // Simpan alasan penolakan
+            'rejection_reason' => $request->reason, // Simpan alasan penolakan
+            'admin_read' => true,
         ]);
 
         $emailSent = false;
@@ -202,10 +270,45 @@ class OrderController extends Controller
         return redirect()->route('admin.orders')->with('success', $message);
     }
 
+    // Membatalan pesanan oleh Admin
+    public function cancelAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'cancellation_reason' => 'required|string|min:5|max:1000',
+        ], [
+            'cancellation_reason.required' => 'Alasan pembatalan wajib diisi.',
+            'cancellation_reason.min' => 'Alasan pembatalan minimal 5 karakter.',
+        ]);
+
+        $order = Order::findOrFail($id);
+
+        if (in_array($order->status, ['completed', 'canceled'])) {
+            return back()->with('error', 'Pesanan ini sudah selesai atau sudah dibatalkan.');
+        }
+
+        DB::transaction(function () use ($order, $request) {
+            if ($order->payment_proof) {
+                Storage::delete('public/' . $order->payment_proof);
+            }
+
+            $order->update([
+                'status' => 'canceled',
+                'payment_proof' => null,
+                'cancellation_reason' => '[Admin] ' . $request->cancellation_reason,
+                'admin_read' => true,
+            ]);
+        });
+
+        return redirect()->route('admin.orders')->with('success', 'Pesanan #' . $order->id . ' berhasil dibatalkan oleh Admin.');
+    }
+
     // 9. Riwayat Pesanan User
     public function history()
     {
-        $orders = Order::where('user_id', Auth::id())->latest()->get();
+        $orders = Order::with(['orderItems.product'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
         return view('orders.index', compact('orders'));
     }
 

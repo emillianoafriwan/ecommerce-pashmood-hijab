@@ -12,9 +12,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\SyncCartSession::class,
+        ]);
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
+        $middleware->redirectUsersTo(function () {
+            if (auth()->user()?->role === 'admin') {
+                return route('admin.dashboard');
+            }
+            return '/';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

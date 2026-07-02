@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Kategori - Admin PASHMOOD</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.theme-loader')
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -19,10 +20,17 @@
                 <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Admin Panel</p>
                 <h1 class="text-2xl font-extrabold tracking-tighter">PASHMOOD</h1>
             </div>
-            <a href="/dashboard" class="bg-slate-800 hover:bg-slate-700 text-sm font-bold px-5 py-2.5 rounded-xl transition border border-slate-700 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                Kembali ke Dashboard
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="/dashboard" class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 hover:border-rose-500 bg-slate-800 overflow-hidden transition" title="Dashboard">
+                    @if(auth()->user()->avatar)
+                        <img src="{{ asset('storage/' . auth()->user()->avatar) }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full bg-rose-100 flex items-center justify-center text-rose-700 font-bold text-sm">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    @endif
+                </a>
+            </div>
         </div>
     </header>
 
@@ -133,5 +141,6 @@
 
     </main>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
+    @include('partials.theme-customizer')
 </body>
 </html>
