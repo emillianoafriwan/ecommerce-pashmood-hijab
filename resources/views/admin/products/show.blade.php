@@ -136,7 +136,9 @@
                 <h2 class="text-2xl font-extrabold text-slate-800">Ulasan <span class="text-rose-500">Komunitas</span></h2>
                 <div class="h-px flex-1 bg-rose-100 mx-6 hidden md:block"></div>
                 @auth
-                <button onclick="document.getElementById('review-form').scrollIntoView({behavior: 'smooth'})" class="text-sm font-bold text-rose-600">Tulis Review</button>
+                    @if($hasBought && !$alreadyReviewed)
+                    <button onclick="document.getElementById('review-form').scrollIntoView({behavior: 'smooth'})" class="text-sm font-bold text-rose-600">Tulis Review</button>
+                    @endif
                 @endauth
             </div>
 
@@ -177,35 +179,72 @@
 
             <!-- Form Review -->
             @auth
-            <div id="review-form" class="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white">
-                <h3 class="text-2xl font-extrabold mb-2">Bagikan Pengalamanmu</h3>
-                <p class="text-slate-400 text-sm mb-8">Ulasanmu sangat berharga bagi pelanggan PASHMOOD lainnya.</p>
-                
-                <form action="{{ route('review.store', $product->id) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Rating Kamu</label>
-                            <select name="rating" class="w-full bg-slate-800 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-rose-500 outline-none">
-                                <option value="5">Sempurna (5/5)</option>
-                                <option value="4">Sangat Puas (4/5)</option>
-                                <option value="3">Cukup (3/5)</option>
-                            </select>
+                @if($hasBought)
+                    @if($alreadyReviewed)
+                        @php
+                            $myReview = $product->reviews->where('user_id', auth()->id())->first();
+                        @endphp
+                        <div class="bg-emerald-50 border border-emerald-100 p-8 rounded-[3rem] shadow-sm text-slate-800">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-black shadow-md shadow-emerald-100">
+                                    ✓
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-emerald-950">Anda Sudah Memberikan Ulasan</h3>
+                                    <p class="text-xs text-emerald-700/80">Terima kasih telah membagikan pengalaman Anda!</p>
+                                </div>
+                            </div>
+                            @if($myReview)
+                                <div class="bg-white/80 backdrop-blur p-6 rounded-2xl border border-emerald-100/50 mt-4">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="flex text-yellow-400 text-xs gap-0.5">
+                                            @for($i = 0; $i < 5; $i++)
+                                                <span>{{ $i < $myReview->rating ? '★' : '☆' }}</span>
+                                            @endfor
+                                        </div>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ $myReview->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="text-slate-600 text-sm leading-relaxed mb-4 italic">"{{ $myReview->comment }}"</p>
+                                    @if($myReview->media_path)
+                                        <div class="rounded-xl overflow-hidden w-20 h-20 border border-emerald-100 shadow-sm">
+                                            <img src="{{ asset('storage/' . $myReview->media_path) }}" class="w-full h-full object-cover">
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Foto/Video</label>
-                            <input type="file" name="media" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-rose-600 file:text-white file:font-bold hover:file:bg-rose-700 cursor-pointer">
+                    @else
+                        <div id="review-form" class="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white">
+                            <h3 class="text-2xl font-extrabold mb-2">Bagikan Pengalamanmu</h3>
+                            <p class="text-slate-400 text-sm mb-8">Ulasanmu sangat berharga bagi pelanggan PASHMOOD lainnya.</p>
+                            
+                            <form action="{{ route('review.store', $product->id) }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Rating Kamu</label>
+                                        <select name="rating" class="w-full bg-slate-800 border-none rounded-2xl px-6 py-4 text-white focus:ring-2 focus:ring-rose-500 outline-none">
+                                            <option value="5">Sempurna (5/5)</option>
+                                            <option value="4">Sangat Puas (4/5)</option>
+                                            <option value="3">Cukup (3/5)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Foto/Video</label>
+                                        <input type="file" name="media" class="w-full text-xs text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-rose-600 file:text-white file:font-bold hover:file:bg-rose-700 cursor-pointer">
+                                    </div>
+                                </div>
+                                <div class="mb-8">
+                                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Pesan</label>
+                                    <textarea name="comment" rows="4" class="w-full bg-slate-800 border-none rounded-[2rem] px-6 py-4 text-white focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Tuliskan pendapatmu tentang produk ini..."></textarea>
+                                </div>
+                                <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-2xl font-bold transition shadow-lg shadow-rose-900/20">
+                                    Kirim Ulasan Sekarang
+                                </button>
+                            </form>
                         </div>
-                    </div>
-                    <div class="mb-8">
-                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Pesan</label>
-                        <textarea name="comment" rows="4" class="w-full bg-slate-800 border-none rounded-[2rem] px-6 py-4 text-white focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Tuliskan pendapatmu tentang produk ini..."></textarea>
-                    </div>
-                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-2xl font-bold transition shadow-lg shadow-rose-900/20">
-                        Kirim Ulasan Sekarang
-                    </button>
-                </form>
-            </div>
+                    @endif
+                @endif
             @endauth
         </div>
     </div>

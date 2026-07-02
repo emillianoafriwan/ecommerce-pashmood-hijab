@@ -197,7 +197,26 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product->load('variations'); 
-        return view('admin.products.show', compact('product'));
+        $product->load(['variations', 'reviews.user']); 
+        
+        $hasBought = false;
+        $alreadyReviewed = false;
+
+        if (auth()->check()) {
+            $hasBought = \App\Models\Order::where('user_id', auth()->id())
+                ->where('status', 'completed')
+                ->whereHas('orderItems', function ($query) use ($product) {
+                    $query->where('product_id', $product->id);
+                })
+                ->exists();
+
+            if ($hasBought) {
+                $alreadyReviewed = \App\Models\Review::where('user_id', auth()->id())
+                    ->where('product_id', $product->id)
+                    ->exists();
+            }
+        }
+
+        return view('admin.products.show', compact('product', 'hasBought', 'alreadyReviewed'));
     }
 }
