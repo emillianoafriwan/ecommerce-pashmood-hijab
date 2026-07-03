@@ -44,7 +44,7 @@
             <!-- Gambar Produk -->
             <div class="relative group">
                 <div class="aspect-[4/5] overflow-hidden rounded-[2.5rem] bg-rose-50">
-                    <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                    <img id="product-image" src="{{ $product->imageUrl() }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
                 </div>
                 <!-- Badge PO -->
                 <div class="absolute top-6 left-6">
@@ -59,10 +59,6 @@
                     <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 mt-2">{{ $product->name }}</h1>
                     <div class="flex items-center gap-4 mt-3">
                         <p class="text-3xl font-black text-rose-600">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                        <div class="flex text-yellow-400 text-sm">
-                            ★ ★ ★ ★ <span class="text-slate-200">★</span>
-                            <span class="ml-2 text-slate-400 font-medium">(Ulasan)</span>
-                        </div>
                     </div>
                 </div>
 
@@ -102,7 +98,7 @@
                                 <div class="flex flex-wrap gap-3">
                                     @forelse($product->variations as $variation)
                                         <label class="relative cursor-pointer group">
-                                            <input type="radio" name="variation_id" value="{{ $variation->id }}" class="peer hidden" {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
+                                            <input type="radio" name="variation_id" value="{{ $variation->id }}" data-image="{{ $variation->imageUrl() }}" class="peer hidden" {{ $variation->id == $firstAvailableVariationId ? 'checked' : '' }} required>
                                             <div class="px-5 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all group-hover:border-rose-200">
                                                 {{ $variation->color }}
                                             </div>
@@ -132,7 +128,7 @@
 
                 <div class="mt-8 flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-t border-rose-50 pt-8">
                     <div class="flex items-center gap-2">✨ Premium Material</div>
-                    {{-- <div class="flex items-center gap-2">🕒 Est. Ready 7 Days</div> --}}
+                    <div class="flex items-center gap-2">🕒 Est. Ready 14 Days</div>
                 </div>
             </div>
         </div>
@@ -163,9 +159,13 @@
                             <h4 class="font-bold text-slate-800">{{ $review->user->name }}</h4>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">{{ $review->created_at->diffForHumans() }}</span>
                         </div>
-                        <div class="flex text-yellow-400 text-xs mb-3">
+                        <div class="flex text-xs mb-3">
                             @for($i = 0; $i < 5; $i++)
-                                <span>{{ $i < $review->rating ? '★' : '☆' }}</span>
+                                @if($i < $review->rating)
+                                    <span class="text-yellow-400">★</span>
+                                @else
+                                    <span class="text-slate-300">☆</span>
+                                @endif
                             @endfor
                         </div>
                         <p class="text-slate-500 text-sm leading-relaxed mb-4">{{ $review->comment }}</p>
@@ -204,9 +204,13 @@
                             @if($myReview)
                                 <div class="bg-white/80 backdrop-blur p-6 rounded-2xl border border-emerald-100/50 mt-4">
                                     <div class="flex justify-between items-center mb-3">
-                                        <div class="flex text-yellow-400 text-xs gap-0.5">
+                                        <div class="flex text-xs gap-0.5">
                                             @for($i = 0; $i < 5; $i++)
-                                                <span>{{ $i < $myReview->rating ? '★' : '☆' }}</span>
+                                                @if($i < $myReview->rating)
+                                                    <span class="text-yellow-400">★</span>
+                                                @else
+                                                    <span class="text-slate-300">☆</span>
+                                                @endif
                                             @endfor
                                         </div>
                                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ $myReview->created_at->diffForHumans() }}</span>
@@ -256,31 +260,47 @@
         </div>
     </div>
 
-    <!-- WHATSAPP (Sama dengan Landing Page) -->
-    <a href="https://wa.me/6282281112033" target="_blank" class="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-white text-slate-800 p-2 pr-6 rounded-full shadow-2xl border border-rose-50 group hover:-translate-y-1 transition duration-300">
-        <div class="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-lg shadow-green-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.124.551 4.195 1.597 6.012L.152 24l6.104-1.558c1.76.974 3.742 1.488 5.775 1.488 6.645 0 12.031-5.385 12.031-12.031C24 5.385 18.676 0 12.031 0zm3.834 17.151c-.167.472-.962.91-1.341.97-.379.059-.877.108-2.617-.584-2.127-.845-3.486-3.031-3.593-3.176-.108-.145-.857-1.144-.857-2.181 0-1.037.541-1.548.736-1.761.196-.214.428-.267.57-.267.142 0 .285 0 .408.006.13.007.303-.051.472.355.178.428.608 1.486.662 1.593.053.107.089.232.018.375-.071.143-.107.232-.214.357-.107.125-.226.268-.321.375-.107.125-.226.258-.101.472.125.214.555.916 1.189 1.485.819.734 1.517.962 1.731 1.069.214.107.339.089.464-.054.125-.143.535-.624.678-.838.143-.214.285-.178.481-.107.196.071 1.248.589 1.462.696.214.107.357.16.409.25.054.089.054.517-.113.989z"/></svg>
-        </div>
-        <div class="flex flex-col">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Bantuan Chat</span>
-            <span class="text-sm font-bold text-slate-700">Tanya Produk</span>
-        </div>
-    </a>
+    <!-- FLOATING CHAT WIDGET -->
+    @include('partials.chat-widget', ['productId' => $product->id])
 
     <script>
-        const quantityInput = document.getElementById('quantity');
-        const decreaseQty = document.getElementById('decreaseQty');
-        const increaseQty = document.getElementById('increaseQty');
+        (function () {
+            const quantityInput = document.getElementById('quantity');
+            const decreaseQty = document.getElementById('decreaseQty');
+            const increaseQty = document.getElementById('increaseQty');
 
-        if (quantityInput) {
-            decreaseQty?.addEventListener('click', () => {
-                if(Number(quantityInput.value) > 1) quantityInput.value = Number(quantityInput.value) - 1;
-            });
+            if (quantityInput) {
+                decreaseQty?.addEventListener('click', () => {
+                    if(Number(quantityInput.value) > 1) quantityInput.value = Number(quantityInput.value) - 1;
+                });
 
-            increaseQty?.addEventListener('click', () => {
-                quantityInput.value = Number(quantityInput.value) + 1;
-            });
-        }
+                increaseQty?.addEventListener('click', () => {
+                    quantityInput.value = Number(quantityInput.value) + 1;
+                });
+            }
+
+            // JS to handle color variation image swapping
+            const productImage = document.getElementById('product-image');
+            const colorRadios = document.querySelectorAll('input[name="variation_id"]');
+
+            function updateProductImage() {
+                const checkedRadio = document.querySelector('input[name="variation_id"]:checked');
+                if (checkedRadio && productImage) {
+                    const imageUrl = checkedRadio.getAttribute('data-image');
+                    if (imageUrl) {
+                        productImage.src = imageUrl;
+                    }
+                }
+            }
+
+            if (colorRadios.length > 0) {
+                colorRadios.forEach(radio => {
+                    radio.addEventListener('change', updateProductImage);
+                });
+                // Run on initial load to match the default checked variation
+                updateProductImage();
+            }
+        })();
     </script>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 </body>

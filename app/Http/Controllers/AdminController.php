@@ -16,18 +16,7 @@ class AdminController extends Controller
     {
         // ── Stat Cards ─────────────────────────────────────────────────────────
         $totalRevenue     = Order::whereIn('status', ['paid', 'shipped', 'completed'])->sum('total_price');
-        $pendingOrders    = Order::where('admin_read', false)
-            ->where(function ($query) {
-                $query->whereIn('status', ['pre_order', 'pending', 'waiting'])
-                    ->orWhere(function ($subQuery) {
-                        $subQuery->where('status', 'canceled')
-                            ->where(function ($subSub) {
-                                $subSub->whereNull('cancellation_reason')
-                                    ->orWhere('cancellation_reason', 'not like', '[Admin]%');
-                            });
-                    });
-            })
-            ->count();
+        $pendingOrders    = Order::where('status', 'waiting')->count();
         $unreadNotifications = Order::with('user')
             ->where('admin_read', false)
             ->where(function ($query) {
@@ -44,7 +33,11 @@ class AdminController extends Controller
             ->get();
         $completedOrders  = Order::where('status', 'completed')->count();
         $totalProducts    = Product::count();
-        $totalCustomers   = User::where('role', 'user')->count();
+        $totalCustomers   = User::where('role', 'user')
+            ->whereHas('orders', function ($query) {
+                $query->whereIn('status', ['paid', 'shipped', 'completed']);
+            })
+            ->count();
         $shippedOrders    = Order::where('status', 'shipped')->count();
 
         // ── Monthly Revenue Chart (last 6 months) ──────────────────────────────
@@ -99,5 +92,20 @@ class AdminController extends Controller
             'orderStatuses',
             'recentOrders'
         ));
+    }
+
+    public function customers()
+    {
+        $customers = User::where('role', 'user')
+            ->withCount(['orders' => function ($query) {
+                $query->whereIn('status', ['paid', 'shipped', 'completed']);
+            }])
+            ->withSum(['orders as total_spent' => function ($query) {
+                $query->whereIn('status', ['paid', 'shipped', 'completed']);
+            }], 'total_price')
+            ->latest()
+            ->get();
+
+        return view('admin.customers.index', compact('customers'));
     }
 }

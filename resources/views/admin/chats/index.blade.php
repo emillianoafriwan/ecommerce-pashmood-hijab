@@ -368,7 +368,7 @@
 
     <!-- Scripts -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        (function () {
             const usersContainer = document.getElementById('users-list');
             const chatEmptyState = document.getElementById('chat-empty-state');
             const chatActiveState = document.getElementById('chat-active-state');
@@ -473,7 +473,7 @@
                                             <h5 class="text-xs font-black text-slate-800 truncate">${u.name}</h5>
                                             <span class="text-[9px] font-bold text-slate-400 whitespace-nowrap">${u.latest_message_time}</span>
                                         </div>
-                                        <p class="text-[10px] font-semibold text-slate-500 truncate leading-none">${u.latest_message || 'Lampiran kartu'}</p>
+                                        <p class="text-[10px] font-semibold text-slate-500 truncate leading-normal">${u.latest_message || 'Lampiran kartu'}</p>
                                     </div>
                                     ${unreadHtml}
                                 </div>
@@ -673,7 +673,13 @@
             function scrollToBottom() {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-        });
+
+            // Cleanup intervals when page is navigated away from (if smooth navigation is ever enabled)
+            window.addEventListener('beforeunload', () => {
+                if (pollingUsersList) clearInterval(pollingUsersList);
+                if (pollingActiveChat) clearInterval(pollingActiveChat);
+            });
+        })();
     </script>
 
     @include('partials.theme-customizer')

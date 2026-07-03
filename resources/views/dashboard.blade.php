@@ -687,7 +687,7 @@
             {{-- ══ STAT CARDS ══ --}}
             <div class="stat-grid anim-2">
                 {{-- Total Spend --}}
-                <div class="stat-card c-blue">
+                <a href="{{ route('orders.history', ['status' => 'paid_shipped_completed']) }}" class="stat-card c-blue" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-blue">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -701,10 +701,10 @@
                             <span class="stat-pill pill-green">Terverifikasi</span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Total Orders --}}
-                <div class="stat-card c-pink">
+                <a href="{{ route('orders.history', ['status' => 'paid_shipped_completed']) }}" class="stat-card c-pink" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-pink">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -718,10 +718,10 @@
                             <span class="stat-pill pill-pink">Transaksi</span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Pending Orders --}}
-                <div class="stat-card c-amber">
+                <a href="{{ route('orders.history', ['status' => 'pending']) }}" class="stat-card c-amber" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-amber">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -735,10 +735,10 @@
                             <span class="stat-pill pill-amber">Belum Selesai</span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Completed Orders --}}
-                <div class="stat-card c-green">
+                <a href="{{ route('orders.history', ['status' => 'completed']) }}" class="stat-card c-green" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-green">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -752,7 +752,7 @@
                             <span class="stat-pill pill-green">Selesai</span>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             {{-- ══ FEATURE CARDS GRID ══ --}}

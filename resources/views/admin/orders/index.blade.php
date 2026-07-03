@@ -69,9 +69,17 @@
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @forelse($orders as $order)
-                        <tr class="hover:bg-slate-50/50 transition-colors duration-300 group">
+                        <tr class="{{ $order->status == 'waiting' ? 'bg-amber-50/40 hover:bg-amber-50/60' : 'hover:bg-slate-50/50' }} transition-colors duration-300 group">
                             <td class="px-8 py-6">
-                                <span class="text-sm font-bold text-slate-500 group-hover:text-slate-800 transition">#{{ $order->id }}</span>
+                                <div class="flex items-center gap-2">
+                                    @if($order->status == 'waiting')
+                                        <span class="relative flex h-2.5 w-2.5 shrink-0" title="Menunggu Verifikasi">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                        </span>
+                                    @endif
+                                    <span class="text-sm font-bold text-slate-500 group-hover:text-slate-800 transition">#{{ $order->id }}</span>
+                                </div>
                             </td>
                             <td class="px-8 py-6">
                                 @php $product = $order->orderItems->first()?->product; @endphp
@@ -107,7 +115,7 @@
                                 </span>
                             </td>
                             <td class="px-8 py-6 text-right">
-                                <a href="{{ route('admin.order.detail', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition duration-300 gap-1.5">
+                                <a href="{{ route('admin.order.detail', $order->id) }}" class="inline-flex items-center justify-center px-4 py-2 {{ $order->status == 'waiting' ? 'bg-rose-600 text-white shadow-lg shadow-rose-200 hover:bg-rose-700' : 'bg-slate-100 text-slate-600 hover:bg-rose-600 hover:text-white' }} rounded-xl text-xs font-bold transition duration-300 gap-1.5">
                                     Kelola
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
                                 </a>

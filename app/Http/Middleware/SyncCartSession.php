@@ -32,7 +32,7 @@ class SyncCartSession
                         "variation_id" => $item->product_variation_id,
                         "quantity"     => $item->quantity,
                         "price"        => $item->product->price,
-                        "image"        => $item->product->imageUrl()
+                        "image"        => $item->variation->imageUrl()
                     ];
                 }
             }

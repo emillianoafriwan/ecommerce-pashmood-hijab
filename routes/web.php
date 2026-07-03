@@ -86,6 +86,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->group(function () {
     
     // Dashboard Admin
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/customers', [AdminController::class, 'customers'])->name('admin.customers');
     
     // Manajemen Toko
     Route::resource('categories', CategoryController::class)->except(['show']);

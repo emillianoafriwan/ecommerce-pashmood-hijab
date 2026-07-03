@@ -14,9 +14,19 @@ use App\Mail\PaymentRejectedMail;
 class OrderController extends Controller
 {
     // 1. Menampilkan daftar pesanan untuk Admin
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::with(['user', 'orderItems.product'])->latest()->get();
+        $query = Order::with(['user', 'orderItems.product']);
+
+        if ($request->filled('status')) {
+            if ($request->status === 'pending') {
+                $query->whereIn('status', ['pre_order', 'pending', 'waiting']);
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        $orders = $query->latest()->get();
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -198,8 +208,8 @@ class OrderController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        if (!in_array($order->status, ['pre_order', 'pending', 'waiting'])) {
-            return back()->with('error', 'Pesanan ini sudah tidak dapat dibatalkan.');
+        if ($order->payment_proof || !in_array($order->status, ['pre_order', 'pending'])) {
+            return back()->with('error', 'Pesanan yang sudah dibayar tidak dapat dibatalkan.');
         }
 
         DB::transaction(function () use ($order, $request) {
@@ -282,8 +292,8 @@ class OrderController extends Controller
 
         $order = Order::findOrFail($id);
 
-        if (in_array($order->status, ['completed', 'canceled'])) {
-            return back()->with('error', 'Pesanan ini sudah selesai atau sudah dibatalkan.');
+        if (in_array($order->status, ['shipped', 'completed', 'canceled'])) {
+            return back()->with('error', 'Pesanan ini tidak dapat dibatalkan karena sedang dikirim, sudah selesai, atau sudah dibatalkan.');
         }
 
         DB::transaction(function () use ($order, $request) {
@@ -303,12 +313,22 @@ class OrderController extends Controller
     }
 
     // 9. Riwayat Pesanan User
-    public function history()
+    public function history(Request $request)
     {
-        $orders = Order::with(['orderItems.product'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $query = Order::with(['orderItems.product'])
+            ->where('user_id', Auth::id());
+
+        if ($request->filled('status')) {
+            if ($request->status === 'paid_shipped_completed') {
+                $query->whereIn('status', ['paid', 'shipped', 'completed']);
+            } elseif ($request->status === 'pending') {
+                $query->whereIn('status', ['paid', 'shipped']);
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        $orders = $query->latest()->get();
         return view('orders.index', compact('orders'));
     }
 

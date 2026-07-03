@@ -56,7 +56,7 @@
         </div>
 
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        (function () {
             const avatarInput = document.getElementById('avatar');
             const avatarPreview = document.getElementById('avatar-preview');
             const avatarInitial = document.getElementById('avatar-initial');
@@ -66,50 +66,52 @@
             // Simpan data inisial
             const initialText = "{{ strtoupper(substr($user->name, 0, 1)) }}";
 
-            avatarInput.addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        avatarPreview.src = e.target.result;
-                        avatarPreview.classList.remove('hidden');
-                        if (avatarInitial) {
-                            avatarInitial.classList.add('hidden');
+            if (avatarInput && avatarPreview && btnDeleteAvatar && deleteAvatarInput) {
+                avatarInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            avatarPreview.src = e.target.result;
+                            avatarPreview.classList.remove('hidden');
+                            if (avatarInitial) {
+                                avatarInitial.classList.add('hidden');
+                            }
+                            btnDeleteAvatar.classList.remove('hidden');
+                            deleteAvatarInput.value = '0';
                         }
-                        btnDeleteAvatar.classList.remove('hidden');
-                        deleteAvatarInput.value = '0';
+                        reader.readAsDataURL(file);
                     }
-                    reader.readAsDataURL(file);
-                }
-            });
+                });
 
-            btnDeleteAvatar.addEventListener('click', function() {
-                // Reset file input
-                avatarInput.value = '';
-                // Hide preview
-                avatarPreview.src = '';
-                avatarPreview.classList.add('hidden');
-                // Show initial if container exists
-                if (avatarInitial) {
-                    avatarInitial.classList.remove('hidden');
-                } else {
-                    const container = document.getElementById('avatar-container');
-                    let initialSpan = document.getElementById('avatar-initial');
-                    if (!initialSpan) {
-                        initialSpan = document.createElement('span');
-                        initialSpan.id = 'avatar-initial';
-                        initialSpan.textContent = initialText;
-                        container.appendChild(initialSpan);
+                btnDeleteAvatar.addEventListener('click', function() {
+                    // Reset file input
+                    avatarInput.value = '';
+                    // Hide preview
+                    avatarPreview.src = '';
+                    avatarPreview.classList.add('hidden');
+                    // Show initial if container exists
+                    if (avatarInitial) {
+                        avatarInitial.classList.remove('hidden');
                     } else {
-                        initialSpan.classList.remove('hidden');
+                        const container = document.getElementById('avatar-container');
+                        let initialSpan = document.getElementById('avatar-initial');
+                        if (!initialSpan) {
+                            initialSpan = document.createElement('span');
+                            initialSpan.id = 'avatar-initial';
+                            initialSpan.textContent = initialText;
+                            container.appendChild(initialSpan);
+                        } else {
+                            initialSpan.classList.remove('hidden');
+                        }
                     }
-                }
-                // Hide delete button
-                btnDeleteAvatar.classList.add('hidden');
-                // Set hidden input to 1
-                deleteAvatarInput.value = '1';
-            });
-        });
+                    // Hide delete button
+                    btnDeleteAvatar.classList.add('hidden');
+                    // Set hidden input to 1
+                    deleteAvatarInput.value = '1';
+                });
+            }
+        })();
         </script>
 
         <div>
@@ -656,10 +658,8 @@
 
         // Auto-buka form jika ada error validasi dari request bank
         @if($errors->has('bank_name') || $errors->has('bank_account') || $errors->has('bank_owner'))
-            document.addEventListener('DOMContentLoaded', function() {
-                openForm();
-                document.getElementById('bank-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+            openForm();
+            document.getElementById('bank-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         @endif
     })();
     </script>

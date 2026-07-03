@@ -206,6 +206,23 @@
             <a href="{{ route('admin.orders') }}" class="nav-item">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 Pesanan
+                @php
+                    $unreadOrdersNotif = \App\Models\Order::where('admin_read', false)
+                        ->where(function ($query) {
+                            $query->whereIn('status', ['pre_order', 'pending', 'waiting'])
+                                ->orWhere(function ($subQuery) {
+                                    $subQuery->where('status', 'canceled')
+                                        ->where(function ($subSub) {
+                                            $subSub->whereNull('cancellation_reason')
+                                                ->orWhere('cancellation_reason', 'not like', '[Admin]%');
+                                        });
+                                });
+                        })
+                        ->count();
+                @endphp
+                @if($unreadOrdersNotif > 0)
+                    <span class="nav-badge" style="background-color: #e11d48; color: white; border-radius: 9999px; padding: 2px 8px; font-size: 10px; font-weight: bold; margin-left: auto;">{{ $unreadOrdersNotif }}</span>
+                @endif
             </a>
             <a href="{{ route('admin.chats') }}" class="nav-item">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 18px; height: 18px; color: var(--muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>

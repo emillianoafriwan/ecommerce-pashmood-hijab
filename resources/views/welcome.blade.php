@@ -241,7 +241,7 @@
                                     </div>
                                 </div>
                                 <script>
-                                    document.addEventListener('DOMContentLoaded', function () {
+                                    (function () {
                                         const popup = document.getElementById('profileWarningPopup');
                                         const dismissBtn = document.getElementById('dismissProfilePopup');
                                         if (popup && !localStorage.getItem('profile_warning_dismissed')) {
@@ -255,7 +255,7 @@
                                                 localStorage.setItem('profile_warning_dismissed', 'true');
                                             });
                                         }
-                                    });
+                                    })();
                                 </script>
                             @endif
                         </div>

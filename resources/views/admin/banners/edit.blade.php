@@ -282,6 +282,23 @@
             <a href="{{ route('admin.orders') }}" class="nav-item">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 Pesanan
+                @php
+                    $unreadOrdersNotif = \App\Models\Order::where('admin_read', false)
+                        ->where(function ($query) {
+                            $query->whereIn('status', ['pre_order', 'pending', 'waiting'])
+                                ->orWhere(function ($subQuery) {
+                                    $subQuery->where('status', 'canceled')
+                                        ->where(function ($subSub) {
+                                            $subSub->whereNull('cancellation_reason')
+                                                ->orWhere('cancellation_reason', 'not like', '[Admin]%');
+                                        });
+                                });
+                        })
+                        ->count();
+                @endphp
+                @if($unreadOrdersNotif > 0)
+                    <span class="nav-badge" style="background-color: #e11d48; color: white; border-radius: 9999px; padding: 2px 8px; font-size: 10px; font-weight: bold; margin-left: auto;">{{ $unreadOrdersNotif }}</span>
+                @endif
             </a>
             <a href="{{ route('admin.chats') }}" class="nav-item">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 18px; height: 18px; color: var(--muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -467,177 +484,201 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
-let cropperInstance = null;
-let originalFile = null;
+(function () {
+    let cropperInstance = null;
+    let originalFile = null;
 
-const imageInput = document.getElementById('imageInput');
-const croppedInput = document.getElementById('image-cropped');
-const cropModal = document.getElementById('crop-modal');
-const cropImage = document.getElementById('crop-image');
-const zoomSlider = document.getElementById('zoom-slider');
-const previewWrapper = document.getElementById('imagePreviewWrapper');
-const previewImg = document.getElementById('imagePreview');
-const previewLabel = document.getElementById('previewLabel');
-const currentImg = document.getElementById('currentImg');
-const uploadArea = document.getElementById('uploadArea');
-const recropBtn = document.getElementById('recrop-btn');
-const cropHint = document.getElementById('crop-hint');
-const bannerForm = document.querySelector('form');
-
-imageInput.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-        cropHint.textContent = 'Format file harus berupa gambar.';
-        cropHint.style.color = '#ef233c';
-        this.value = '';
-        return;
-    }
-
-    originalFile = file;
-    openCropModal(file);
-});
-
-function openCropModal(file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        cropModal.classList.add('open');
-        if (cropperInstance) {
-            cropperInstance.destroy();
-        }
-
-        cropImage.onload = function () {
-            cropperInstance = new Cropper(cropImage, {
-                aspectRatio: 16/9,
-                viewMode: 1,
-                autoCropArea: 0.9,
-                movable: true,
-                zoomable: true,
-                guides: true,
-                ready() {
-                    zoomSlider.value = 0;
-                },
-                zoom(e) {
-                    zoomSlider.value = Math.max(0, Math.min(3, e.detail.ratio));
-                }
-            });
-            cropImage.onload = null;
-        };
-        cropImage.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-function closeCropModal() {
-    cropModal.classList.remove('open');
-    if (cropperInstance) {
-        cropperInstance.destroy();
-        cropperInstance = null;
-    }
-    imageInput.value = '';
-}
-
-function setRatio(ratio, btn) {
-    if (!cropperInstance) return;
-    document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    cropperInstance.setAspectRatio(ratio);
-}
-
-zoomSlider.addEventListener('input', function () {
-    if (cropperInstance) {
-        cropperInstance.zoomTo(parseFloat(this.value));
-    }
-});
-
-function applyCrop() {
-    if (!cropperInstance) return;
-    const canvas = cropperInstance.getCroppedCanvas({
-        maxWidth: 2400,
-        maxHeight: 1200,
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high'
+    Object.defineProperty(window, 'cropperInstance', {
+        get() { return cropperInstance; },
+        set(val) { cropperInstance = val; },
+        configurable: true
     });
 
-    if (!canvas) {
-        cropHint.textContent = 'Gagal memproses gambar.';
-        cropHint.style.color = '#ef233c';
-        return;
+    const imageInput = document.getElementById('imageInput');
+    const croppedInput = document.getElementById('image-cropped');
+    const cropModal = document.getElementById('crop-modal');
+    const cropImage = document.getElementById('crop-image');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const previewWrapper = document.getElementById('imagePreviewWrapper');
+    const previewImg = document.getElementById('imagePreview');
+    const previewLabel = document.getElementById('previewLabel');
+    const currentImg = document.getElementById('currentImg');
+    const uploadArea = document.getElementById('uploadArea');
+    const recropBtn = document.getElementById('recrop-btn');
+    const cropHint = document.getElementById('crop-hint');
+    const bannerForm = document.querySelector('form');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                cropHint.textContent = 'Format file harus berupa gambar.';
+                cropHint.style.color = '#ef233c';
+                this.value = '';
+                return;
+            }
+
+            originalFile = file;
+            openCropModal(file);
+        });
     }
 
-    canvas.toBlob(function (blob) {
-        if (!blob) {
-            cropHint.textContent = 'Gagal menyimpan hasil crop.';
-            cropHint.style.color = '#ef233c';
-            return;
-        }
+    function openCropModal(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            cropModal.classList.add('open');
+            if (cropperInstance) {
+                cropperInstance.destroy();
+            }
 
-        const ext = originalFile.type === 'image/png' ? 'png' : 'jpg';
-        const mimeType = originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        const croppedFile = new File([blob], 'banner-cropped.' + ext, { type: mimeType });
+            cropImage.onload = function () {
+                cropperInstance = new Cropper(cropImage, {
+                    aspectRatio: 16/9,
+                    viewMode: 1,
+                    autoCropArea: 0.9,
+                    movable: true,
+                    zoomable: true,
+                    guides: true,
+                    ready() {
+                        zoomSlider.value = 0;
+                    },
+                    zoom(e) {
+                        zoomSlider.value = Math.max(0, Math.min(3, e.detail.ratio));
+                    }
+                });
+                cropImage.onload = null;
+            };
+            cropImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    window.openCropModal = openCropModal;
 
-        const dt = new DataTransfer();
-        dt.items.add(croppedFile);
-        croppedInput.files = dt.files;
-
-        // Show Preview
-        const url = URL.createObjectURL(blob);
-        previewImg.src = url;
-        currentImg.src = url;
-        
-        const mb = croppedFile.size / 1048576;
-        const sizeStr = mb < 0.1 ? Math.round(croppedFile.size / 1024) + ' KB' : mb.toFixed(2) + ' MB';
-        previewLabel.textContent = `Gambar baru cropped: ${sizeStr}`;
-        
-        previewWrapper.style.display = 'block';
-        recropBtn.style.display = 'inline-block';
-        
-        cropHint.textContent = '✓ Gambar baru siap diunggah.';
-        cropHint.style.color = '#06d6a0';
-
+    function closeCropModal() {
         cropModal.classList.remove('open');
         if (cropperInstance) {
             cropperInstance.destroy();
             cropperInstance = null;
         }
-    }, originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.9);
-}
-
-recropBtn.addEventListener('click', function () {
-    if (originalFile) {
-        openCropModal(originalFile);
+        if (imageInput) imageInput.value = '';
     }
-});
+    window.closeCropModal = closeCropModal;
 
-uploadArea.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadArea.classList.add('drag-over');
-});
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
-uploadArea.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadArea.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) {
-        imageInput.files = e.dataTransfer.files;
-        imageInput.dispatchEvent(new Event('change'));
+    function setRatio(ratio, btn) {
+        if (!cropperInstance) return;
+        document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        cropperInstance.setAspectRatio(ratio);
     }
-});
+    window.setRatio = setRatio;
 
-// Close modal when clicking backdrop
-cropModal.addEventListener('click', function (e) {
-    if (e.target === cropModal) closeCropModal();
-});
-
-// Validate on submit
-bannerForm.addEventListener('submit', function (e) {
-    if (imageInput.files.length && !croppedInput.files.length) {
-        e.preventDefault();
-        cropHint.textContent = 'Klik "Crop Ulang" atau crop terlebih dahulu gambar baru Anda.';
-        cropHint.style.color = '#ef233c';
-        imageInput.focus();
+    if (zoomSlider) {
+        zoomSlider.addEventListener('input', function () {
+            if (cropperInstance) {
+                cropperInstance.zoomTo(parseFloat(this.value));
+            }
+        });
     }
-});
+
+    function applyCrop() {
+        if (!cropperInstance) return;
+        const canvas = cropperInstance.getCroppedCanvas({
+            maxWidth: 2400,
+            maxHeight: 1200,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+
+        if (!canvas) {
+            cropHint.textContent = 'Gagal memproses gambar.';
+            cropHint.style.color = '#ef233c';
+            return;
+        }
+
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                cropHint.textContent = 'Gagal menyimpan hasil crop.';
+                cropHint.style.color = '#ef233c';
+                return;
+            }
+
+            const ext = originalFile.type === 'image/png' ? 'png' : 'jpg';
+            const mimeType = originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
+            const croppedFile = new File([blob], 'banner-cropped.' + ext, { type: mimeType });
+
+            const dt = new DataTransfer();
+            dt.items.add(croppedFile);
+            croppedInput.files = dt.files;
+
+            // Show Preview
+            const url = URL.createObjectURL(blob);
+            previewImg.src = url;
+            if (currentImg) currentImg.src = url;
+            
+            const mb = croppedFile.size / 1048576;
+            const sizeStr = mb < 0.1 ? Math.round(croppedFile.size / 1024) + ' KB' : mb.toFixed(2) + ' MB';
+            previewLabel.textContent = `Gambar baru cropped: ${sizeStr}`;
+            
+            previewWrapper.style.display = 'block';
+            recropBtn.style.display = 'inline-block';
+            
+            cropHint.textContent = '✓ Gambar baru siap diunggah.';
+            cropHint.style.color = '#06d6a0';
+
+            cropModal.classList.remove('open');
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+        }, originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.9);
+    }
+    window.applyCrop = applyCrop;
+
+    if (recropBtn) {
+        recropBtn.addEventListener('click', function () {
+            if (originalFile) {
+                openCropModal(originalFile);
+            }
+        });
+    }
+
+    if (uploadArea) {
+        uploadArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files[0] && imageInput) {
+                imageInput.files = e.dataTransfer.files;
+                imageInput.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    // Close modal when clicking backdrop
+    if (cropModal) {
+        cropModal.addEventListener('click', function (e) {
+            if (e.target === cropModal) closeCropModal();
+        });
+    }
+
+    // Validate on submit
+    if (bannerForm) {
+        bannerForm.addEventListener('submit', function (e) {
+            if (imageInput && imageInput.files.length && croppedInput && !croppedInput.files.length) {
+                e.preventDefault();
+                cropHint.textContent = 'Klik "Crop Ulang" atau crop terlebih dahulu gambar baru Anda.';
+                cropHint.style.color = '#ef233c';
+                imageInput.focus();
+            }
+        });
+    }
+})();
 </script>
     @include('partials.theme-customizer')
 </body>

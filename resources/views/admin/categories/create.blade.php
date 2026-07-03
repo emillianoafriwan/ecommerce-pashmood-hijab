@@ -95,36 +95,44 @@
 
     <!-- Script Pembuat Slug Otomatis -->
     <script>
-        function generateSlug() {
-            const nameStr = document.getElementById('name').value;
-            const slugStr = nameStr.toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter selain huruf, angka, spasi, dan strip
-                .replace(/[\s-]+/g, '-')      // Ubah spasi menjadi strip
-                .replace(/^-+|-+$/g, '');     // Hapus strip di awal dan akhir kata
-            
-            document.getElementById('slug').value = slugStr;
-        }
-
-        // Tangkap semua cara input: ketik, paste, autofill
-        const nameInput = document.getElementById('name');
-        ['input', 'paste', 'change'].forEach(function(event) {
-            nameInput.addEventListener(event, function() {
-                setTimeout(generateSlug, 0); // setTimeout agar value sudah terupdate saat paste
-            });
-        });
-
-        // Generate slug saat form di-submit jika slug masih kosong
-        document.getElementById('categoryForm').addEventListener('submit', function(e) {
-            const slugInput = document.getElementById('slug');
-            if (!slugInput.value.trim()) {
-                generateSlug();
-                // Jika nama pun kosong sehingga slug tetap kosong, batalkan submit
-                if (!slugInput.value.trim()) {
-                    e.preventDefault();
-                    nameInput.focus();
-                }
+        (function () {
+            function generateSlug() {
+                const nameStr = document.getElementById('name').value;
+                const slugStr = nameStr.toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '') // Hapus karakter selain huruf, angka, spasi, dan strip
+                    .replace(/[\s-]+/g, '-')      // Ubah spasi menjadi strip
+                    .replace(/^-+|-+$/g, '');     // Hapus strip di awal dan akhir kata
+                
+                document.getElementById('slug').value = slugStr;
             }
-        });
+            window.generateSlug = generateSlug;
+
+            // Tangkap semua cara input: ketik, paste, autofill
+            const nameInput = document.getElementById('name');
+            if (nameInput) {
+                ['input', 'paste', 'change'].forEach(function(event) {
+                    nameInput.addEventListener(event, function() {
+                        setTimeout(generateSlug, 0); // setTimeout agar value sudah terupdate saat paste
+                    });
+                });
+            }
+
+            // Generate slug saat form di-submit jika slug masih kosong
+            const categoryForm = document.getElementById('categoryForm');
+            if (categoryForm) {
+                categoryForm.addEventListener('submit', function(e) {
+                    const slugInput = document.getElementById('slug');
+                    if (slugInput && !slugInput.value.trim()) {
+                        generateSlug();
+                        // Jika nama pun kosong sehingga slug tetap kosong, batalkan submit
+                        if (!slugInput.value.trim()) {
+                            e.preventDefault();
+                            nameInput?.focus();
+                        }
+                    }
+                });
+            }
+        })();
     </script>
     <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
     @include('partials.theme-customizer')

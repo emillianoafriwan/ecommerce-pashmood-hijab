@@ -771,8 +771,8 @@
                           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                 </svg>
                 Pesanan
-                @if($pendingOrders > 0)
-                    <span class="nav-badge">{{ $pendingOrders }}</span>
+                @if(count($unreadNotifications) > 0)
+                    <span class="nav-badge">{{ count($unreadNotifications) }}</span>
                 @endif
             </a>
 
@@ -880,13 +880,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        @if($pendingOrders > 0) <span class="notif-dot"></span> @endif
+                        @if(count($unreadNotifications) > 0) <span class="notif-dot"></span> @endif
                     </button>
                     
                     <div class="notif-dropdown-menu" id="notif-dropdown-menu" style="display: none;">
                         <div class="notif-dropdown-header">
-                            <span>Notifikasi ({{ $pendingOrders }})</span>
-                            @if($pendingOrders > 0)
+                            <span>Notifikasi ({{ count($unreadNotifications) }})</span>
+                            @if(count($unreadNotifications) > 0)
                                 <form action="{{ route('admin.orders.mark_all_read') }}" method="POST" style="margin:0;">
                                     @csrf
                                     <button type="submit" class="mark-all-btn">Tandai semua dibaca</button>
@@ -948,7 +948,7 @@
             <div class="stat-grid">
 
                 {{-- Total Pendapatan --}}
-                <div class="stat-card c-blue anim-1">
+                <a href="{{ route('admin.orders.report') }}" class="stat-card c-blue anim-1" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-blue">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -967,10 +967,10 @@
                             </span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Pesanan Menunggu --}}
-                <div class="stat-card c-amber anim-2">
+                <a href="{{ route('admin.orders', ['status' => 'waiting']) }}" class="stat-card c-amber anim-2" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-amber">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -981,15 +981,15 @@
                         <div class="stat-label">Menunggu Tindakan</div>
                         <div class="stat-value">{{ $pendingOrders }}</div>
                         <div class="stat-footer">
-                            <a href="{{ route('admin.orders') }}" class="stat-pill pill-amber" style="text-decoration:none;">
+                            <span class="stat-pill pill-amber">
                                 Lihat Semua →
-                            </a>
+                            </span>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 {{-- Pesanan Selesai --}}
-                <div class="stat-card c-green anim-3">
+                <a href="{{ route('admin.orders', ['status' => 'completed']) }}" class="stat-card c-green anim-3" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-green">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1003,10 +1003,10 @@
                             <span class="stat-pill pill-green">Completed</span>
                         </div>
                     </div>
-                </div>
+                </a>
 
-                {{-- Total Produk + Pelanggan --}}
-                <div class="stat-card c-pink anim-4">
+                {{-- Total Pelanggan + Produk --}}
+                <a href="{{ route('admin.customers') }}" class="stat-card c-pink anim-4" style="text-decoration: none;">
                     <div class="stat-icon-wrap ic-pink">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1020,7 +1020,7 @@
                             <span class="stat-pill pill-pink">{{ $totalProducts }} Produk</span>
                         </div>
                     </div>
-                </div>
+                </a>
 
             </div>
 
@@ -1284,132 +1284,134 @@
 @endphp
 
 <script>
-function initDashboardCharts() {
-    // ── Revenue Line Chart ─────────────────────────────────────────────────────
-    const revenueLabels = @json($revenueLabels);
-    const revenueData   = @json($revenueData);
+(function () {
+    function initDashboardCharts() {
+        // ── Revenue Line Chart ─────────────────────────────────────────────────────
+        const revenueLabels = @json($revenueLabels);
+        const revenueData   = @json($revenueData);
 
-    const revenueCanvas = document.getElementById('revenueChart');
-    if (!revenueCanvas) return;
-    const revenueCtx = revenueCanvas.getContext('2d');
+        const revenueCanvas = document.getElementById('revenueChart');
+        if (!revenueCanvas) return;
+        const revenueCtx = revenueCanvas.getContext('2d');
 
-    const gradRevenue = revenueCtx.createLinearGradient(0, 0, 0, 200);
-    gradRevenue.addColorStop(0,   'rgba(67,97,238,.28)');
-    gradRevenue.addColorStop(0.6, 'rgba(67,97,238,.06)');
-    gradRevenue.addColorStop(1,   'rgba(67,97,238,0)');
+        const gradRevenue = revenueCtx.createLinearGradient(0, 0, 0, 200);
+        gradRevenue.addColorStop(0,   'rgba(67,97,238,.28)');
+        gradRevenue.addColorStop(0.6, 'rgba(67,97,238,.06)');
+        gradRevenue.addColorStop(1,   'rgba(67,97,238,0)');
 
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: revenueLabels,
-            datasets: [{
-                label: 'Pendapatan (Rp)',
-                data: revenueData,
-                borderColor: '#4361ee',
-                borderWidth: 2.5,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#4361ee',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: '#4361ee',
-                backgroundColor: gradRevenue,
-                fill: true,
-                tension: 0.42,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1a2e',
-                    titleFont: { family: 'Inter', size: 12, weight: '600' },
-                    bodyFont: { family: 'Inter', size: 12 },
-                    padding: 12,
-                    cornerRadius: 10,
-                    callbacks: {
-                        label: ctx => ' Rp ' + ctx.parsed.y.toLocaleString('id-ID')
-                    }
-                }
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Pendapatan (Rp)',
+                    data: revenueData,
+                    borderColor: '#4361ee',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHoverBackgroundColor: '#4361ee',
+                    backgroundColor: gradRevenue,
+                    fill: true,
+                    tension: 0.42,
+                }]
             },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: {
-                        font: { family: 'Inter', size: 11 },
-                        color: '#9898b0',
-                        padding: 8,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleFont: { family: 'Inter', size: 12, weight: '600' },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: ctx => ' Rp ' + ctx.parsed.y.toLocaleString('id-ID')
+                        }
                     }
                 },
-                y: {
-                    grid: { color: '#ebebf5', drawTicks: false },
-                    border: { display: false, dash: [4, 4] },
-                    ticks: {
-                        font: { family: 'Inter', size: 11 },
-                        color: '#9898b0',
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: {
+                            font: { family: 'Inter', size: 11 },
+                            color: '#9898b0',
+                            padding: 8,
+                        }
+                    },
+                    y: {
+                        grid: { color: '#ebebf5', drawTicks: false },
+                        border: { display: false, dash: [4, 4] },
+                        ticks: {
+                            font: { family: 'Inter', size: 11 },
+                            color: '#9898b0',
+                            padding: 12,
+                            callback: v => v >= 1000000 ? 'Rp ' + (v/1000000).toFixed(1) + 'jt' : (v === 0 ? '0' : 'Rp ' + v.toLocaleString('id-ID'))
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── Status Doughnut Chart ──────────────────────────────────────────────────
+        const statusCanvas = document.getElementById('statusChart');
+        if (!statusCanvas) return;
+        const statusCtx = statusCanvas.getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: @json($chartLabels),
+                datasets: [{
+                    data: @json($chartValues),
+                    backgroundColor: @json($chartColors),
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '74%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleFont: { family: 'Inter', size: 12, weight: '600' },
+                        bodyFont: { family: 'Inter', size: 12 },
                         padding: 12,
-                        callback: v => v >= 1000000 ? 'Rp ' + (v/1000000).toFixed(1) + 'jt' : (v === 0 ? '0' : 'Rp ' + v.toLocaleString('id-ID'))
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + ' pesanan'
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // ── Status Doughnut Chart ──────────────────────────────────────────────────
-    const statusCanvas = document.getElementById('statusChart');
-    if (!statusCanvas) return;
-    const statusCtx = statusCanvas.getContext('2d');
-    new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: @json($chartLabels),
-            datasets: [{
-                data: @json($chartValues),
-                backgroundColor: @json($chartColors),
-                borderWidth: 3,
-                borderColor: '#ffffff',
-                hoverOffset: 8,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '74%',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a1a2e',
-                    titleFont: { family: 'Inter', size: 12, weight: '600' },
-                    bodyFont: { family: 'Inter', size: 12 },
-                    padding: 12,
-                    cornerRadius: 10,
-                    callbacks: {
-                        label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + ' pesanan'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Ensure Chart.js is loaded before running initialization logic
-if (typeof Chart === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
-    script.onload = initDashboardCharts;
-    document.body.appendChild(script);
-} else {
-    initDashboardCharts();
-}
+    // Ensure Chart.js is loaded before running initialization logic
+    if (typeof Chart === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+        script.onload = initDashboardCharts;
+        document.body.appendChild(script);
+    } else {
+        initDashboardCharts();
+    }
+})();
 </script>
 
 <script src="{{ asset('/js/smooth-navigation.js') }}"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function () {
     const bellBtn = document.getElementById('notif-bell-btn');
     const dropdownMenu = document.getElementById('notif-dropdown-menu');
 
@@ -1429,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
+})();
 </script>
 
 

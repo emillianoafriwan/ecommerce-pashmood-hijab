@@ -410,7 +410,7 @@
                     <div class="flex items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
-                                <img src="{{ $item->product->imageUrl() ?? asset('images/default.jpg') }}" alt="Produk" class="w-full h-full object-cover">
+                                <img src="{{ ($item->variation ? $item->variation->imageUrl() : $item->product->imageUrl()) ?? asset('images/default.jpg') }}" alt="Produk" class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <p class="font-bold text-slate-800">{{ $item->product->name ?? 'Produk PASHMOOD' }}</p>
@@ -534,7 +534,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('order.confirm', $order->id) }}" method="POST" enctype="multipart/form-data" data-no-ajax="true">
+                <form id="form-upload-payment" action="{{ route('order.confirm', $order->id) }}" method="POST" enctype="multipart/form-data" data-no-ajax="true">
                     @csrf
                     <div class="mb-6">
                         <label class="block text-xs font-black text-slate-700 mb-3 uppercase tracking-widest">Upload Bukti Transfer</label>
@@ -552,7 +552,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-rose-600 transition shadow-xl shadow-slate-200">
+                    <button type="button" onclick="handleUploadPaymentClick(event)" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-rose-600 transition shadow-xl shadow-slate-200">
                         Kirim Bukti Pembayaran
                     </button>
                 </form>
@@ -603,7 +603,7 @@
             </div>
         @endif
 
-        @if(in_array($order->status, ['pre_order', 'pending', 'waiting']))
+        @if(empty($order->payment_proof) && in_array($order->status, ['pre_order', 'pending']))
             <div class="bg-white rounded-[2.5rem] shadow-sm border border-rose-100 p-8">
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-6">
                     <div>
@@ -625,6 +625,20 @@
                         Batalkan Pesanan
                     </button>
                 </form>
+            </div>
+        @elseif($order->status !== 'canceled')
+            <div class="bg-slate-50 border border-slate-100 rounded-[2.5rem] p-8 flex flex-col sm:flex-row items-center gap-4.5">
+                <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center shrink-0 border border-amber-100 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="text-center sm:text-left">
+                    <h4 class="font-extrabold text-slate-800 text-sm uppercase tracking-widest mb-1">Pesanan Tidak Dapat Dibatalkan</h4>
+                    <p class="text-xs font-semibold text-slate-500 leading-relaxed">
+                        Anda telah melakukan pembayaran atau mengunggah bukti transfer untuk pesanan ini. Sesuai ketentuan, pesanan yang sudah dibayar tidak dapat dibatalkan secara sepihak.
+                    </p>
+                </div>
             </div>
         @endif
 
@@ -695,7 +709,7 @@
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0">
-                                            <img src="{{ $item->product->imageUrl() ?? asset('images/default.jpg') }}" alt="Produk" class="w-full h-full object-cover">
+                                            <img src="{{ ($item->variation ? $item->variation->imageUrl() : $item->product->imageUrl()) ?? asset('images/default.jpg') }}" alt="Produk" class="w-full h-full object-cover">
                                         </div>
                                         <div>
                                             <h4 class="font-bold text-slate-800 text-sm">{{ $item->product->name ?? 'Produk PASHMOOD' }}</h4>
@@ -938,6 +952,26 @@
                 }
             }
 
+            function handleUploadPaymentClick(event) {
+                const fileInput = document.getElementById('payment_proof');
+                if (!fileInput || !fileInput.files || !fileInput.files.length) {
+                    alert('Harap pilih dan unggah foto bukti transfer terlebih dahulu!');
+                    return;
+                }
+
+                const form = document.getElementById('form-upload-payment');
+                if (form.reportValidity()) {
+                    showConfirm({
+                        title: 'Kirim Bukti Pembayaran?',
+                        message: 'Apakah Anda yakin bukti transfer yang Anda pilih sudah benar? Setelah bukti transfer dikirim, pesanan tidak dapat dibatalkan secara sepihak.',
+                        icon: '💳',
+                        confirmText: 'Ya, Kirim',
+                        confirmClass: 'bg-slate-900 hover:bg-rose-600 shadow-slate-200',
+                        formId: 'form-upload-payment'
+                    });
+                }
+            }
+
             function handleCompleteClick() {
                 showConfirm({
                     title: 'Konfirmasi Penerimaan',
@@ -955,6 +989,8 @@
             window.updateFileName = updateFileName;
             window.previewPaymentProof = previewPaymentProof;
             window.handleCancelClick = handleCancelClick;
+            window.handleUploadPaymentClick = handleUploadPaymentClick;
+            window.handleCompleteClick = handleCompleteClick;
         })();
     </script>
     <!-- FLOATING CHAT WIDGET -->

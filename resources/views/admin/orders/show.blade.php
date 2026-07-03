@@ -171,7 +171,7 @@
                     </div>
                 @endif
 
-                @if(!in_array($order->status, ['completed', 'canceled']))
+                @if(!in_array($order->status, ['shipped', 'completed', 'canceled']))
                     <div class="mt-6 border-t border-slate-100 pt-6">
                         <button type="button" onclick="document.getElementById('admin-cancel-form-container').classList.toggle('hidden')" class="w-full bg-white text-rose-600 border border-rose-200 font-bold py-3.5 rounded-2xl hover:bg-rose-50 transition text-sm uppercase tracking-wider">
                             Batalkan Pesanan (Admin)

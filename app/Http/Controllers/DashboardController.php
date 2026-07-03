@@ -22,8 +22,8 @@ class DashboardController extends Controller
         }
 
         // Basic buyer metrics
-        $totalOrders = Order::where('user_id', $user->id)->count();
-        $pendingOrders = Order::where('user_id', $user->id)->whereIn('status', ['pre_order', 'pending', 'waiting'])->count();
+        $totalOrders = Order::where('user_id', $user->id)->whereIn('status', ['paid', 'shipped', 'completed'])->count();
+        $pendingOrders = Order::where('user_id', $user->id)->whereIn('status', ['paid', 'shipped'])->count();
         $completedOrders = Order::where('user_id', $user->id)->where('status', 'completed')->count();
         $totalSpend = Order::where('user_id', $user->id)->whereIn('status', ['paid', 'shipped', 'completed'])->sum('total_price');
 
